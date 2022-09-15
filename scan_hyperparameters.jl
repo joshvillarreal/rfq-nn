@@ -261,7 +261,7 @@ function main()
                     "n_epochs"=>n_epochs,
                     "batchsize"=>batchsize,
                     "optimizer"=>"ADAM",
-                    "loss_function"=>"loss_function_string"
+                    "loss_function"=>loss_function_string
                 ),
                 "results"=>cv_scores
             )
