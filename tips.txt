@@ -1,0 +1,2 @@
+I had to make sure that Julia was added to my path. This isn't mentioned in the installation instructions. The following command worked for me:
+$ sudo ln -s /Applications/Julia-1.8.app/Contents/Resources/julia/bin/julia /usr/local/bin/julia
