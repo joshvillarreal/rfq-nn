@@ -24,11 +24,10 @@ function readjsonsfromdirectory(target_directory::String, x_df, y_df)
             end
 
             # build y
-            for (i, sample) in enumerate(data_raw)
+            for sample in enumerate(data_raw)
                 responses = Dict{String, Any}(sample[2]["obj"])
                 responses_formatted = Dict{String, Float64}(Iterators.map(tofloat, pairs(responses)))
                 push!(y_df, responses_formatted)
-                @assert(sample[1] == indexes[i])
             end
         end
     end
