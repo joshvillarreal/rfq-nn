@@ -8,4 +8,5 @@ Be sure to have Julia installed on your machine. You can download Julia <a href=
 
 ## Package requirements
 Scripts can be installed by leveraging the Julia `Pkg` module. Run the following from the root of the directory:
+
 ```$ julia requirements.jl```
