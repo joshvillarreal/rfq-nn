@@ -185,15 +185,15 @@ function crossvalidate(
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
 
         # update aggregate scores
-        updateaggregatescoresdict!(
-            scores_total, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
+        updatescoresdict!(
+            scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
             size(x_train_temp, 2), training_losses
         )
 
         # update scores by objective
         for j in 1:6
             updatescoresdict!(
-                scores_by_response["OBJ$j"], y_train_temp[:, j], y_train_temp_preds[:, j],
+                scores_by_response["OBJ$j"], i, y_train_temp[:, j], y_train_temp_preds[:, j],
                 y_val_temp[:, j], y_val_temp_preds[:, j], size(x_train_temp, 2))
         end
     end
@@ -236,16 +236,15 @@ function main()
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsize = 1024
-    optimizer=ADAM(), # can't change this for now
-    loss_function=Flux.Losses.mse,
+    optimizer=ADAM() # can't change this for now
+    loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
-    for width in widths
-        for depth in depths     
+    Threads.@threads for width in widths
+        Threads.@threads for depth in depths     
             if log_training_starts
-                println("training width=$width, depth=$depth")
+                println("training width=$width, depth=$depth on thread $(Threads.threadid())")
             end
 
-            loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
             cv_scores = crossvalidate(
                 x_train, y_train;
                 n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 

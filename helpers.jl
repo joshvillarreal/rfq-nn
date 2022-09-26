@@ -124,48 +124,39 @@ end
 
 
 # documenting scores
-function initscoresdict()
-    return Dict(
-        "r2score_train"=>[], "r2score_val"=>[],
-        "adj_r2score_train"=>[], "adj_r2score_val"=>[],
-        "mse_train"=>[], "mse_val"=>[],
-        "mae_train"=>[], "mae_val"=>[],
-        "training_losses"=>[]
+function initscoresdict(n_folds)
+    scores_dict = Dict(
+        "r2score_train"=>Vector{Float64}(undef, n_folds),
+        "r2score_val"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_train"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_val"=>Vector{Float64}(undef, n_folds),
+        "mse_train"=>Vector{Float64}(undef, n_folds),
+        "mse_val"=>Vector{Float64}(undef, n_folds),
+        "mae_train"=>Vector{Float64}(undef, n_folds),
+        "mae_val"=>Vector{Float64}(undef, n_folds),
     )
 end
 
 
-function updatescoresdict!(scores_dict, y_train, y_train_preds, y_val, y_val_preds, n_features::Int)
-    push!(scores_dict["r2score_train"], r2score(y_train, y_train_preds))
-    push!(scores_dict["r2score_val"], r2score(y_val, y_val_preds))
-    
-    push!(scores_dict["adj_r2score_train"], adjustedr2score(y_train, y_train_preds, n_features))
-    push!(scores_dict["adj_r2score_val"], adjustedr2score(y_val, y_val_preds, n_features))
+function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, y_val_preds, n_features::Int, training_losses=nothing)
+    scores_dict["r2score_train"][fold_id] = r2score(y_train, y_train_preds)
+    scores_dict["r2score_val"][fold_id] = r2score(y_val, y_val_preds)
 
-    push!(scores_dict["mse_train"], Flux.mse(y_train_preds, y_train))
-    push!(scores_dict["mse_val"], Flux.mse(y_val_preds, y_val))
+    scores_dict["adj_r2score_train"][fold_id] = adjustedr2score(y_train, y_train_preds, n_features)
+    scores_dict["adj_r2score_val"][fold_id] = adjustedr2score(y_val, y_val_preds, n_features)
 
-    push!(scores_dict["mae_train"], Flux.mae(y_train_preds, y_train))
-    push!(scores_dict["mae_val"], Flux.mae(y_val_preds, y_val))
-end
+    scores_dict["mse_train"][fold_id] = Flux.mse(y_train_preds, y_train)
+    scores_dict["mse_val"][fold_id] = Flux.mse(y_val_preds, y_val)
 
+    scores_dict["mae_train"][fold_id] = Flux.mae(y_train_preds, y_train)
+    scores_dict["mae_val"][fold_id] = Flux.mae(y_val_preds, y_val)
 
-function updateaggregatescoresdict!(
-    scores_dict, y_train, y_train_preds, y_val, y_val_preds, n_features::Int, training_losses
-)
-    push!(scores_dict["r2score_train"], r2score_multidim(y_train, y_train_preds))
-    push!(scores_dict["r2score_val"], r2score_multidim(y_val, y_val_preds))
-    
-    push!(scores_dict["adj_r2score_train"], adjustedr2score_multidim(y_train, y_train_preds, n_features))
-    push!(scores_dict["adj_r2score_val"], adjustedr2score_multidim(y_val, y_val_preds, n_features))
-
-    push!(scores_dict["mse_train"], Flux.mse(y_train_preds, y_train))
-    push!(scores_dict["mse_val"], Flux.mse(y_val_preds, y_val))
-
-    push!(scores_dict["mae_train"], Flux.mae(y_train_preds, y_train))
-    push!(scores_dict["mae_val"], Flux.mae(y_val_preds, y_val))
-
-    push!(scores_dict["training_losses"], training_losses)
+    if training_losses === Nothing()
+        return scores_dict
+    else
+        scores_dict["training_losses"] = training_losses
+        return scores_dict
+    end
 end
 
 
