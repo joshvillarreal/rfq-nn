@@ -266,7 +266,7 @@ function main()
                 "results"=>cv_scores
             )
 
-            open(outfile, "w") do f
+            open(outfile, "a") do f
                 JSON.print(f, outdata)
             end
         end
