@@ -38,7 +38,7 @@ end
 function buildandtrain(
     x_train,
     y_train;
-    n_epochs::Int=10000,
+    n_epochs::Int=100,
     batchsize::Int=64,
     optimizer=ADAM(),
     log_training::Bool=false
@@ -74,23 +74,52 @@ function buildandtrain(
 end
 
 
-function main()
-    # data handling
-    x, y = generatedata(0., 1., 1000)
-    x_train, x_test, y_train, y_test = traintestsplit(x, y)
-
-    # training 4 times
-    outdata = Dict("losses"=>[])
-    Threads.@threads for i in 1:4
-        m, losses = buildandtrain(x_train, y_train; log_training=true)
-        push!(outdata["losses"], losses)
-    end
-
-    # write histories to file
-    open("parallelization_results.json", "w") do f
+function writetofile(outdata, filename)
+    open(filename, "a") do f
         JSON.print(f, outdata)
     end
 end
 
 
-main()
+function parallelizedmain()
+    # data handling
+    x, y = generatedata(0., 1., 1000)
+    x_train, x_test, y_train, y_test = traintestsplit(x, y)
+
+    # number of NNs to train
+    number_nns = 4
+
+    # training 4 times
+    outdata = Dict("losses"=>Vector{Vector{Float64}}(undef, number_nns))
+    Threads.@threads for i in 1:number_nns
+        println("training NN $i on thread $(Threads.threadid())")
+        m, losses = buildandtrain(x_train, y_train; log_training=true)
+        outdata["losses"][i] = losses
+    end
+
+    # write histories to file
+    filename = "parallelization_test_outfile.json"
+    writetofile(outdata, filename)
+end
+
+
+function unparallelizedmain()
+    # data handling
+    x, y = generatedata(0., 1., 1000)
+    x_train, x_test, y_train, y_test = traintestsplit(x, y)
+
+    # number of NNs to train
+    number_nns = 4
+
+    # training 4 times
+    outdata = Dict("losses"=>Vector{Vector{Float64}}(undef, number_nns))
+    for i in 1:number_nns
+        print("training NN $i")
+        m, losses = buildandtrain(x_train, y_train; log_training=true)
+        outdata["losses"][i] = losses
+    end
+
+    # write histories to file
+    filename = "parallelization_test_outfile_2.json"
+    writetofile(outdata, filename)
+end
