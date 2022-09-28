@@ -1,3 +1,6 @@
+using Flux;
+
+
 # rsquared
 function r2score(yvec, ŷvec)
     ymean = mean(yvec)
@@ -34,5 +37,42 @@ function adjustedr2score_multidim(ys, ŷs, p::Int, multioutput::String="uniform
         return mean(adjustedr2score_rawvalues)
     else
         error("multioutput must be one of \"rawvalues\" or \"uniformaverage\"")
+    end
+end
+
+
+# documenting scores
+function initscoresdict(n_folds)
+    scores_dict = Dict(
+        "r2score_train"=>Vector{Float64}(undef, n_folds),
+        "r2score_val"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_train"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_val"=>Vector{Float64}(undef, n_folds),
+        "mse_train"=>Vector{Float64}(undef, n_folds),
+        "mse_val"=>Vector{Float64}(undef, n_folds),
+        "mae_train"=>Vector{Float64}(undef, n_folds),
+        "mae_val"=>Vector{Float64}(undef, n_folds),
+    )
+end
+
+
+function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, y_val_preds, n_features::Int, training_losses=nothing)
+    scores_dict["r2score_train"][fold_id] = r2score(y_train, y_train_preds)
+    scores_dict["r2score_val"][fold_id] = r2score(y_val, y_val_preds)
+
+    scores_dict["adj_r2score_train"][fold_id] = adjustedr2score(y_train, y_train_preds, n_features)
+    scores_dict["adj_r2score_val"][fold_id] = adjustedr2score(y_val, y_val_preds, n_features)
+
+    scores_dict["mse_train"][fold_id] = Flux.mse(y_train_preds, y_train)
+    scores_dict["mse_val"][fold_id] = Flux.mse(y_val_preds, y_val)
+
+    scores_dict["mae_train"][fold_id] = Flux.mae(y_train_preds, y_train)
+    scores_dict["mae_val"][fold_id] = Flux.mae(y_val_preds, y_val)
+
+    if training_losses === Nothing()
+        return scores_dict
+    else
+        scores_dict["training_losses"] = training_losses
+        return scores_dict
     end
 end

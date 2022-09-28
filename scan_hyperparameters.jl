@@ -9,6 +9,7 @@ using StatsBase
 using StatsPlots
 
 include("helpers.jl")
+include("stats.jl")
 
 
 # CLI
