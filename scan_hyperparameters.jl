@@ -170,12 +170,12 @@ function crossvalidate(
     scores_total = initscoresdict(n_folds; include_losses=true)
     scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds) for i in 1:6)
 
-    train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
+    folds = kfolds(size(x_train)[1]; k=n_folds)
 
-    for fold_id in 1:n_folds
+    for (fold_id, (train_temp_idxs, val_temp_idxs)) in collect(enumerate(Iterators.zip(folds)))
         # select training and validation sets
-        x_train_temp, x_val_temp = x_train[train_temp_idxs[fold_id], :], x_train[val_temp_idxs[fold_id], :]
-        y_train_temp, y_val_temp = y_train[train_temp_idxs[fold_id], :], y_train[val_temp_idxs[fold_id], :]
+        x_train_temp, x_val_temp = x_train[train_temp_idxs, :], x_train[val_temp_idxs, :]
+        y_train_temp, y_val_temp = y_train[train_temp_idxs, :], y_train[val_temp_idxs, :]
 
         # train model
         m, training_losses = buildandtrain(
