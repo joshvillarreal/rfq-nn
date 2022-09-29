@@ -6,7 +6,7 @@ Be sure to have Julia installed on your machine. You can download Julia <a href=
 
 ```export PATH="$PATH:/path/to/julia-1.8.1/bin"```
 
-Or alternatively, from the command line
+Or alternatively, from the command line:
 
 ```$ sudo ln -s /Applications/Julia-1.8.app/Contents/Resources/julia/bin/julia /usr/local/bin/julia```
 
