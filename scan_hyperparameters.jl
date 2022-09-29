@@ -236,8 +236,8 @@ function main()
     y_train = Matrix(y_train_df); y_test = Matrix(y_test_df);
 
     # training parameters
-    depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
-    widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
+    depths = stratifyarchitecturedimension(depth_range..., depth_steps)
+    widths = stratifyarchitecturedimension(width_range..., width_steps)
     batchsize = 1024
     optimizer=ADAM() # can't change this for now
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
