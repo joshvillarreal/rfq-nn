@@ -172,10 +172,10 @@ function crossvalidate(
 
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
 
-    for i in 1:n_folds
+    for fold_id in 1:n_folds
         # select training and validation sets
-        x_train_temp, x_val_temp = x_train[train_temp_idxs[i], :], x_train[val_temp_idxs[i], :]
-        y_train_temp, y_val_temp = y_train[train_temp_idxs[i], :], y_train[val_temp_idxs[i], :]
+        x_train_temp, x_val_temp = x_train[train_temp_idxs[fold_id], :], x_train[val_temp_idxs[fold_id], :]
+        y_train_temp, y_val_temp = y_train[train_temp_idxs[fold_id], :], y_train[val_temp_idxs[fold_id], :]
 
         # train model
         m, training_losses = buildandtrain(
@@ -188,16 +188,17 @@ function crossvalidate(
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
 
         # update aggregate scores
+        n_features = size(x_train_temp, 2)
         updatescoresdict!(
-            scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
-            size(x_train_temp, 2), training_losses
+            scores_total, fold_id, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
+            n_features, training_losses
         )
 
         # update scores by objective
         for j in 1:6
             updatescoresdict!(
-                scores_by_response["OBJ$j"], i, y_train_temp[:, j], y_train_temp_preds[:, j],
-                y_val_temp[:, j], y_val_temp_preds[:, j], size(x_train_temp, 2))
+                scores_by_response["OBJ$j"], fold_id, y_train_temp[:, j], y_train_temp_preds[:, j],
+                y_val_temp[:, j], y_val_temp_preds[:, j], n_features)
         end
     end
     return Dict("total"=>scores_total, "by_response"=>scores_by_response)
