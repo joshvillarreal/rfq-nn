@@ -6,6 +6,10 @@ Be sure to have Julia installed on your machine. You can download Julia <a href=
 
 ```export PATH="$PATH:/path/to/julia-1.8.1/bin"```
 
+Or alternatively, from the command line
+
+```$ sudo ln -s /Applications/Julia-1.8.app/Contents/Resources/julia/bin/julia /usr/local/bin/julia```
+
 ## Package requirements
 Scripts can be installed by leveraging the Julia `Pkg` module, which is prewritten in `requirements.jl`. Once you've installed Julia, run the following from the root of the directory:
 
