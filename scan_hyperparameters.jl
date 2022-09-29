@@ -246,9 +246,8 @@ function main()
     outdata = Vector{Dict}(undef, length(depths)*length(widths))
 
     # training
-    # TODO: Threads and enumerate seem not to get along?
     Threads.@sync begin
-        for (idx, (width, depth)) in enumerate(collect(Iterators.product(widths, depths)))
+        Threads.@threads for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
             if log_training_starts
                 println("training width=$width, depth=$depth on thread $(Threads.threadid())")
             end
