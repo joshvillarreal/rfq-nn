@@ -2,12 +2,12 @@ using DataFrames;
 using JSON;
 
 
-tofloat((k,v)) = k => parse(Float64, v)
+tofloat((k,v)) = k => parse(Float32, v)
 
 
 function readdataentry(sample, key)
     unformatted_data = Dict{String, Any}(sample[2][key])
-    return Dict{String, Float64}(Iterators.map(tofloat, pairs(unformatted_data)))
+    return Dict{String, Float32}(Iterators.map(tofloat, pairs(unformatted_data)))
 end
 
 
@@ -33,8 +33,8 @@ end
 
 # scaler
 mutable struct MinMaxScaler
-    data_min::Float64
-    data_max::Float64
+    data_min::Float32
+    data_max::Float32
 end
 
 function fit!(scaler, data)

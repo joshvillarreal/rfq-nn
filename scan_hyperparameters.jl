@@ -70,28 +70,28 @@ end
 # reading in data + sanity checking
 function getrawdata(target_directory::String)
     x_raw_df = DataFrame(
-        DVAR1=Float64[],
-        DVAR2=Float64[],
-        DVAR3=Float64[],
-        DVAR4=Float64[],
-        DVAR5=Float64[],
-        DVAR6=Float64[],
-        DVAR7=Float64[],
-        DVAR8=Float64[],
-        DVAR9=Float64[],
-        DVAR10=Float64[],
-        DVAR11=Float64[],
-        DVAR12=Float64[],
-        DVAR13=Float64[],
-        DVAR14=Float64[]
+        DVAR1=Float32[],
+        DVAR2=Float32[],
+        DVAR3=Float32[],
+        DVAR4=Float32[],
+        DVAR5=Float32[],
+        DVAR6=Float32[],
+        DVAR7=Float32[],
+        DVAR8=Float32[],
+        DVAR9=Float32[],
+        DVAR10=Float32[],
+        DVAR11=Float32[],
+        DVAR12=Float32[],
+        DVAR13=Float32[],
+        DVAR14=Float32[]
     )
     y_raw_df = DataFrame(
-        OBJ1=Float64[],
-        OBJ2=Float64[],
-        OBJ3=Float64[],
-        OBJ4=Float64[],
-        OBJ5=Float64[],
-        OBJ6=Float64[]
+        OBJ1=Float32[],
+        OBJ2=Float32[],
+        OBJ3=Float32[],
+        OBJ4=Float32[],
+        OBJ5=Float32[],
+        OBJ6=Float32[]
     )
 
     try
@@ -132,7 +132,7 @@ function buildandtrain(
 
     # training
     loss(x, y) = loss_function(m(x), y)
-    training_losses = Float64[]
+    training_losses = Float32[]
     epochs = Int64[]
 
     for epoch in 1:n_epochs
