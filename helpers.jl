@@ -5,29 +5,24 @@ using JSON;
 tofloat((k,v)) = k => parse(Float64, v)
 
 
+function readdataentry(sample, key)
+    unformatted_data = Dict{String, Any}(sample[2][key])
+    return Dict{String, Float64}(Iterators.map(tofloat, pairs(unformatted_data)))
+end
+
+
 function readjsonsfromdirectory(target_directory::String, x_df, y_df)
-    #= 
-    Updates two empty DataFrames, x_df and y_df, populated with data from some target directory
-    =#
-    for jsonfile in readdir(target_directory)
-        if endswith(jsonfile, ".json")
-            data_raw = JSON.parsefile("$target_directory/$jsonfile")["samples"];
+    # x_df and y_df should be empty
+    for file in readdir(target_directory)
+        if endswith(file, ".json")
+            data_raw = JSON.parsefile("$target_directory/$file")["samples"];
 
-            indexes = Vector{String}()
-
-            # build x
             for sample in data_raw
-                features = Dict{String, Any}(sample[2]["dvar"])
-                features_formatted = Dict{String, Float64}(Iterators.map(tofloat, pairs(features)))
-                push!(x_df, features_formatted)
-                push!(indexes, sample[1])
-            end
+                features = readdataentry(sample, "dvar")
+                responses = readdataentry(sample, "obj")
 
-            # build y
-            for sample in enumerate(data_raw)
-                responses = Dict{String, Any}(sample[2]["obj"])
-                responses_formatted = Dict{String, Float64}(Iterators.map(tofloat, pairs(responses)))
-                push!(y_df, responses_formatted)
+                push!(x_df, features)
+                push!(y_df, responses)
             end
         end
     end

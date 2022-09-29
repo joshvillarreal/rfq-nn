@@ -42,8 +42,8 @@ end
 
 
 # documenting scores
-function initscoresdict(n_folds)
-    scores_dict = Dict(
+function initscoresdict(n_folds; include_losses=false)
+    scores_dict = Dict{String, Any}(
         "r2score_train"=>Vector{Float64}(undef, n_folds),
         "r2score_val"=>Vector{Float64}(undef, n_folds),
         "adj_r2score_train"=>Vector{Float64}(undef, n_folds),
@@ -53,6 +53,12 @@ function initscoresdict(n_folds)
         "mae_train"=>Vector{Float64}(undef, n_folds),
         "mae_val"=>Vector{Float64}(undef, n_folds),
     )
+
+    if include_losses
+        scores_dict["training_losses"] = Vector{Vector{Float64}}(undef, n_folds)
+    end
+
+    return scores_dict
 end
 
 
@@ -69,10 +75,9 @@ function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, 
     scores_dict["mae_train"][fold_id] = Flux.mae(y_train_preds, y_train)
     scores_dict["mae_val"][fold_id] = Flux.mae(y_val_preds, y_val)
 
-    if training_losses === Nothing()
-        return scores_dict
-    else
-        scores_dict["training_losses"] = training_losses
-        return scores_dict
+    if training_losses != nothing
+        scores_dict["training_losses"][fold_id] = training_losses
     end
+
+    return scores_dict
 end

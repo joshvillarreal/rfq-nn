@@ -51,11 +51,12 @@ function parse_commandline()
         "--log-training-starts"
             help = "Print which model is being trained"
             arg_type = Bool
-            default = false
+            default = true
         "--log-training-loss"
             help = "Print training loss per epoch"
             arg_type = Bool
             default = false
+        # TODO: log each fold in CV ?
         "--outfile"
             help = "Filename to record results"
             arg_type = String
@@ -166,10 +167,11 @@ function crossvalidate(
     loss_function=Flux.mse,
     log_training::Bool=false
 )
-    scores_total = initscoresdict()
-    scores_by_response = Dict("OBJ$i"=>initscoresdict() for i in 1:6)
+    scores_total = initscoresdict(n_folds; include_losses=true)
+    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds) for i in 1:6)
 
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
+
     for i in 1:n_folds
         # select training and validation sets
         x_train_temp, x_val_temp = x_train[train_temp_idxs[i], :], x_train[val_temp_idxs[i], :]
@@ -233,15 +235,20 @@ function main()
     x_train = Matrix(x_train_df); x_test = Matrix(x_test_df);
     y_train = Matrix(y_train_df); y_test = Matrix(y_test_df);
 
-    # training
+    # training parameters
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsize = 1024
     optimizer=ADAM() # can't change this for now
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
-    Threads.@threads for width in widths
-        Threads.@threads for depth in depths     
+    # instantiating outdata container
+    outdata = Vector{Dict}(undef, length(depths)*length(widths))
+
+    # training
+    # TODO: Threads and enumerate seem not to get along?
+    Threads.@sync begin
+        for (idx, (width, depth)) in enumerate(collect(Iterators.product(widths, depths)))
             if log_training_starts
                 println("training width=$width, depth=$depth on thread $(Threads.threadid())")
             end
@@ -253,7 +260,7 @@ function main()
             )
 
             # recording results
-            outdata = Dict(
+            outdata_dict = Dict(
                 "configs"=>Dict(
                     "n_folds"=>n_folds,
                     "width"=>width,
@@ -266,11 +273,14 @@ function main()
                 "results"=>cv_scores
             )
 
-            open(outfile, "a") do f
-                JSON.print(f, outdata)
-            end
+            outdata[idx] = outdata_dict
         end
     end
+
+    open(outfile, "a") do f
+        JSON.print(f, outdata, 4)
+    end
+
 end
 
 
