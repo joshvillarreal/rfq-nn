@@ -133,7 +133,7 @@ function buildandtrain(
     # training
     loss(x, y) = loss_function(m(x), y)
     training_losses = Float32[]
-    epochs = Int64[]
+    epochs = Int32[]
 
     for epoch in 1:n_epochs
         Flux.train!(loss, Flux.params(m), data_loader, optimizer)
@@ -210,8 +210,8 @@ function main()
     # gather arguments
     parsed_args = parse_commandline()
     target_directory = parsed_args["data-directory"]
-    depth_range = [parse(Int64, s) for s in parsed_args["depth-range"]]
-    width_range = [parse(Int64, s) for s in parsed_args["width-range"]]
+    depth_range = [parse(Int16, s) for s in parsed_args["depth-range"]]
+    width_range = [parse(Int16, s) for s in parsed_args["width-range"]]
     depth_steps = parsed_args["depth-steps"]
     width_steps = parsed_args["width-steps"]
     n_epochs = parsed_args["n-epochs"]

@@ -87,14 +87,14 @@ end
 =#
 
 
-function stratifyarchitecturedimension(specified_min::Int, specified_max::Int, n::Int=5)
+function stratifyarchitecturedimension(specified_min::Int16, specified_max::Int16, n::Int16=5)
     if specified_min >= specified_max
         return [specified_min]
     else
         stepsize = (specified_max - specified_min) / (n - 1)
         result = []
         for i in 1:n-1
-            push!(result, Int(floor(specified_min + stepsize * (i-1))))
+            push!(result, Int16(floor(specified_min + stepsize * (i-1))))
         end
         push!(result, specified_max)
         return unique(result)
