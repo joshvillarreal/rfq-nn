@@ -55,7 +55,7 @@ function parse_commandline()
         "--log-folds"
             help = "Print when each fold of CV beings"
             arg_type = Bool
-            default = true
+            default = false
         "--log-training-loss"
             help = "Print training loss per epoch"
             arg_type = Bool
@@ -179,7 +179,7 @@ function crossvalidate(
         if log_folds
             println("fold $fold_id of w,d=$width,$depth beginning")
         end
-        
+
         # select training and validation sets
         x_train_temp, x_val_temp = x_train[train_temp_idxs, :], x_train[val_temp_idxs, :]
         y_train_temp, y_val_temp = y_train[train_temp_idxs, :], y_train[val_temp_idxs, :]
