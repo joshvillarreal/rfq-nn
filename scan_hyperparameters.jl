@@ -52,11 +52,14 @@ function parse_commandline()
             help = "Print which model is being trained"
             arg_type = Bool
             default = true
+        "--log-folds"
+            help = "Print when each fold of CV beings"
+            arg_type = Bool
+            default = true
         "--log-training-loss"
             help = "Print training loss per epoch"
             arg_type = Bool
             default = false
-        # TODO: log each fold in CV ?
         "--outfile"
             help = "Filename to record results"
             arg_type = String
@@ -173,6 +176,10 @@ function crossvalidate(
     folds = kfolds(size(x_train)[1]; k=n_folds)
 
     for (fold_id, (train_temp_idxs, val_temp_idxs)) in collect(enumerate(Iterators.zip(folds...)))
+        if log_folds
+            println("fold $fold_id of w,d=$width,$depth beginning")
+        end
+        
         # select training and validation sets
         x_train_temp, x_val_temp = x_train[train_temp_idxs, :], x_train[val_temp_idxs, :]
         y_train_temp, y_val_temp = y_train[train_temp_idxs, :], y_train[val_temp_idxs, :]
@@ -217,6 +224,7 @@ function main()
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
+    log_folds = parsed_args["log-folds"]
     log_training_loss = parsed_args["log-training-loss"]
     n_folds = parsed_args["n-folds"]
     outfile = parsed_args["outfile"]

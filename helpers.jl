@@ -52,8 +52,8 @@ end
 
 function minmax_fit_transform(data)
     scaler = MinMaxScaler(0., 0.)
-    fit!(scaler, data)
-    transform(scaler, data)
+    minmax_fit!(scaler, data)
+    minmax_transform(scaler, data)
 end
 
 
@@ -66,7 +66,7 @@ end
 # standard scaler
 mutable struct StandardScaler
     mean::Float32
-    std::Flaot32
+    std::Float32
 end
 
 function standard_fit!(scaler, data)
