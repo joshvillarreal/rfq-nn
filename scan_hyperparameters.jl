@@ -22,28 +22,28 @@ function parse_commandline()
             arg_type = String
         "--n-folds"
             help = "Number of cross validation folds to use. Recommended 5 or 10"
-            arg_type = Int
-            default = 5
+            arg_type = Int16
+            default = Int16(5)
         "--depth-range"
             help = "Range of depths to search over"
             nargs = '*'
-            default = [10, 60]
+            default = [Int16(10), Int16(60)]
         "--width-range"
             help = "Range of widths to search over"
             nargs = '*'
-            default = [2, 7]
+            default = [Int16(2), Int16(7)]
         "--depth-steps"
             help = "Number of depths to search over in specified depth-range"
-            arg_type = Int
-            default = 5
+            arg_type = Int16
+            default = Int16(5)
         "--width-steps"
             help = "Number of widths to search over in specified width-range"
-            arg_type = Int
-            default = 5
+            arg_type = Int16
+            default = Int16(5)
         "--n-epochs"
             help = "Number of epochs to train each model on"
-            arg_type = Int
-            default = 3
+            arg_type = Int32
+            default = Int32(3)
         "--loss"
             help = "Loss function to use. Can be one of \"mse\" (recommended) or \"mae\""
             arg_type = String
@@ -104,7 +104,7 @@ function getrawdata(target_directory::String)
 end
 
 
-function neuralnetwork(x_dimension::Int, y_dimension::Int, width::Int, depth::Int)
+function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, depth::Int16)
     Chain(
         Dense(x_dimension, width, x->σ.(x)),
         (Dense(width, width, x->σ.(x)) for _ in 1:depth)...,
@@ -116,9 +116,9 @@ end
 function buildandtrain(
     x_train,
     y_train;
-    width::Int,
-    depth::Int,
-    n_epochs::Int=100,
+    width::Int16,
+    depth::Int16,
+    n_epochs::Int32=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
     loss_function=Flux.mse,
@@ -128,7 +128,7 @@ function buildandtrain(
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
     
     # instantiating the model
-    m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth)
+    m = neuralnetwork(Int16(size(x_train)[2]), Int16(size(y_train)[2]), width, depth)
 
     # training
     loss(x, y) = loss_function(m(x), y)
@@ -158,10 +158,10 @@ end
 function crossvalidate(
     x_train,
     y_train;
-    n_folds::Int=5,
-    width::Int,
-    depth::Int,
-    n_epochs::Int=100,
+    n_folds::Int16=5,
+    width::Int16,
+    depth::Int16,
+    n_epochs::Int32=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
     loss_function=Flux.mse,
@@ -172,7 +172,7 @@ function crossvalidate(
 
     folds = kfolds(size(x_train)[1]; k=n_folds)
 
-    for (fold_id, (train_temp_idxs, val_temp_idxs)) in collect(enumerate(Iterators.zip(folds)))
+    for (fold_id, (train_temp_idxs, val_temp_idxs)) in collect(enumerate(Iterators.zip(folds...)))
         # select training and validation sets
         x_train_temp, x_val_temp = x_train[train_temp_idxs, :], x_train[val_temp_idxs, :]
         y_train_temp, y_val_temp = y_train[train_temp_idxs, :], y_train[val_temp_idxs, :]
