@@ -70,43 +70,6 @@ function parse_commandline()
 end
 
 
-# reading in data + sanity checking
-function getrawdata(target_directory::String)
-    x_raw_df = DataFrame(
-        DVAR1=Float32[],
-        DVAR2=Float32[],
-        DVAR3=Float32[],
-        DVAR4=Float32[],
-        DVAR5=Float32[],
-        DVAR6=Float32[],
-        DVAR7=Float32[],
-        DVAR8=Float32[],
-        DVAR9=Float32[],
-        DVAR10=Float32[],
-        DVAR11=Float32[],
-        DVAR12=Float32[],
-        DVAR13=Float32[],
-        DVAR14=Float32[]
-    )
-    y_raw_df = DataFrame(
-        OBJ1=Float32[],
-        OBJ2=Float32[],
-        OBJ3=Float32[],
-        OBJ4=Float32[],
-        OBJ5=Float32[],
-        OBJ6=Float32[]
-    )
-
-    try
-        x_raw_df, y_raw_df = readjsonsfromdirectory(target_directory, x_raw_df, y_raw_df)
-    catch e
-        println("You've entered an invalid target data directory.")
-    end
-        
-    return x_raw_df, y_raw_df
-end
-
-
 function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, depth::Int16)
     Chain(
         Dense(x_dimension, width, x->σ.(x)),
