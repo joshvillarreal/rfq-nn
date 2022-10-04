@@ -7,16 +7,16 @@ using Parameters: @with_kw
 include("helpers.jl")
 include("stats.jl")
 
-
+# TODO -- cleaner hyperparam object
 @with_kw struct HyperParams
     width::Int16
     depth::Int16
     n_epochs::Int32
     batchsize::Int
     learning_rate::Float64
-    loss_function
+    loss_function::Function
+    activation_function::Function
 end
-
 
 function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, depth::Int16)
     Chain(
@@ -25,7 +25,6 @@ function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, dep
         Dense(width, y_dimension)
     )
 end
-
 
 function buildandtrain(
     x_train,

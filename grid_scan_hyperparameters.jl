@@ -55,20 +55,20 @@ function parse_commandline()
             default = "mse"
         "--log-training-starts"
             help = "Print which model is being trained"
-            arg_type = Bool
-            default = true
+            action = :store_true
         "--log-folds"
             help = "Print when each fold of CV beings"
-            arg_type = Bool
-            default = false
+            action = :store_true
         "--log-training-loss"
             help = "Print training loss per epoch"
-            arg_type = Bool
-            default = false
+            action = :store_true
         "--outfile"
             help = "Filename to record results"
             arg_type = String
             default = "results.json"
+        "--toy" # TODO -- implement toy example to it's easy to test things out
+            help = "Use small toy example to try things out"
+            action = :store_true
     end
 
     return parse_args(s)
