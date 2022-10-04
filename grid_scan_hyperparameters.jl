@@ -2,17 +2,14 @@ using ArgParse
 using DataFrames
 using Flux
 import JSON
-using LinearAlgebra
-using MLUtils
-using Plots
-using StatsBase
-using StatsPlots
+using Parameters: @with_kw
 
 include("helpers.jl")
 include("stats.jl")
+include("scalers.jl")
+include("ml.jl")
 
 
-# CLI
 function parse_commandline()
     s = ArgParseSettings()
 
@@ -27,11 +24,11 @@ function parse_commandline()
         "--depth-range"
             help = "Range of depths to search over"
             nargs = '*'
-            default = [Int16(10), Int16(60)]
+            default = ["10", "60"]
         "--width-range"
             help = "Range of widths to search over"
             nargs = '*'
-            default = [Int16(2), Int16(7)]
+            default = ["2", "7"]
         "--depth-steps"
             help = "Number of depths to search over in specified depth-range"
             arg_type = Int16
@@ -40,6 +37,14 @@ function parse_commandline()
             help = "Number of widths to search over in specified width-range"
             arg_type = Int16
             default = Int16(5)
+        "--learning-rate-range"
+            help="Range of learning rates to use for optimizer"
+            nargs= '*'
+            default = ["0.000001", "0.0001"]
+        "--learning-rate-steps"
+            help = "Number of learning rates to search over in specified learning-rate-range"
+            arg_type = Int16
+            default = Int16(2)
         "--n-epochs"
             help = "Number of epochs to train each model on"
             arg_type = Int32
@@ -69,112 +74,11 @@ function parse_commandline()
     return parse_args(s)
 end
 
-
-function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, depth::Int16)
-    Chain(
-        Dense(x_dimension, width, x->σ.(x)),
-        (Dense(width, width, x->σ.(x)) for _ in 1:depth)...,
-        Dense(width, y_dimension)
-    )
-end
-
-
-function buildandtrain(
-    x_train,
-    y_train;
-    width::Int16,
-    depth::Int16,
-    n_epochs::Int32=100,
-    batchsize::Int=1024,
-    optimizer=ADAM(),
-    loss_function=Flux.mse,
-    log_training::Bool=false
-)
-    # batch data
-    data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
-    
-    # instantiating the model
-    m = neuralnetwork(Int16(size(x_train)[2]), Int16(size(y_train)[2]), width, depth)
-
-    # training
-    loss(x, y) = loss_function(m(x), y)
-    training_losses = Float32[]
-    epochs = Int32[]
-
-    for epoch in 1:n_epochs
-        Flux.train!(loss, Flux.params(m), data_loader, optimizer)
-        push!(epochs, epoch)
-
-        l = 0.
-        for d in data_loader
-            l += loss(d...)
-        end
-
-        if log_training
-            println("epoch $epoch, loss=$l")
-        end
-
-        push!(training_losses, l)
+function checkargs(parsed_args)
+    if ~endswith(parsed_args.outfile, ".json")
+        throw("Outfile must be a .json file")
     end
-
-    return m, training_losses
 end
-
-
-function crossvalidate(
-    x_train,
-    y_train;
-    n_folds::Int16=5,
-    width::Int16,
-    depth::Int16,
-    n_epochs::Int32=100,
-    batchsize::Int=1024,
-    optimizer=ADAM(),
-    loss_function=Flux.mse,
-    log_training::Bool=false
-)
-    scores_total = initscoresdict(n_folds; include_losses=true)
-    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds) for i in 1:6)
-
-    folds = kfolds(size(x_train)[1]; k=n_folds)
-
-    for (fold_id, (train_temp_idxs, val_temp_idxs)) in collect(enumerate(Iterators.zip(folds...)))
-        if log_folds
-            println("fold $fold_id of w,d=$width,$depth beginning")
-        end
-
-        # select training and validation sets
-        x_train_temp, x_val_temp = x_train[train_temp_idxs, :], x_train[val_temp_idxs, :]
-        y_train_temp, y_val_temp = y_train[train_temp_idxs, :], y_train[val_temp_idxs, :]
-
-        # train model
-        m, training_losses = buildandtrain(
-            x_train_temp, y_train_temp;
-            width=width, depth=depth, n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
-            loss_function=loss_function, log_training=log_training
-        )
-
-        # gather predictions
-        y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
-
-        # update aggregate scores
-        n_features = size(x_train_temp, 2)
-        updatescoresdict!(
-            scores_total, fold_id, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
-            n_features, training_losses
-        )
-
-        # update scores by objective
-        for j in 1:6
-            updatescoresdict!(
-                scores_by_response["OBJ$j"], fold_id, y_train_temp[:, j], y_train_temp_preds[:, j],
-                y_val_temp[:, j], y_val_temp_preds[:, j], n_features)
-        end
-    end
-    return Dict("total"=>scores_total, "by_response"=>scores_by_response)
-end
-
-
 
 function main()
     # gather arguments
@@ -184,6 +88,8 @@ function main()
     width_range = [parse(Int16, s) for s in parsed_args["width-range"]]
     depth_steps = parsed_args["depth-steps"]
     width_steps = parsed_args["width-steps"]
+    learning_rate_range = [parse(Float64, s) for s in parse_args["learning-rate-range"]]
+    learning_rate_steps = parsed_args["learning-rate-steps"]
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
@@ -210,8 +116,8 @@ function main()
     # training parameters
     depths = stratifyarchitecturedimension(depth_range..., depth_steps)
     widths = stratifyarchitecturedimension(width_range..., width_steps)
+    learning_rates = 
     batchsize = 1024
-    optimizer=ADAM() # can't change this for now
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
@@ -253,6 +159,5 @@ function main()
     end
 
 end
-
 
 main()
