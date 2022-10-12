@@ -28,6 +28,57 @@ end
 # minmax scale data
 function minmaxscaledf(df)
     return hcat(DataFrame.(colname=>minmax_fit_transform(df[!, colname]) for colname in names(df))...)
+endM
+
+
+# dynamic minmax scaler (used for decorrelating)
+mutable struct DynamicMinMaxScaler
+    dynamic_min
+    dynamic_max
+end
+
+function dynamicminmax_transform(scaler, data)
+    2 .* (data .- scaler.dynamic_min) ./ (scaler.dynamic_max .- scaler.dynamic_min) .- 1
+end
+
+function dynamicminmax_inverse_transform(scaler, data_scaled)
+    0.5 .* (scaler.dynamic_max .- scaler.dynamic_min) .* (data_scaled .+ 1) .+ scaler.dynamic_min
+end
+
+function dynamicminmax_fit_transform(data, dynamic_min, dynamic_max)
+    scaler = DynamicMinMaxScaler(dynamic_min, dynamic_max)
+    dynamicminmax_transform(scaler, data)
+end
+
+
+# dynamicminmax scale data
+function dynamicminmaxscaledf(df)
+    mins_and_maxes = Dict(
+        "DVAR1"=>(8.5, 12.0),
+        "DVAR2"=>(5., 140.),
+        "DVAR3"=>(df[!, "DVAR2"] .+ 10., 160.),
+        "DVAR4"=>(1.005, 1.7),
+        "DVAR5"=>(df[!, "DVAR4"] .+ 0.05, 1.85),
+        "DVAR6"=>(1., 500.),
+        "DVAR7"=>(1., 500.),
+        "DVAR8"=>(-89.95, -30.),
+        "DVAR9"=>(df[!, "DVAR8"] .+ 2.5, -25.),
+        "DVAR10"=>(1., 500.),
+        "DVAR11"=>(1., 500.),
+        "DVAR12"=>(df[!, "DVAR5"] .+ 0.05, 2.0),
+        "DVAR13"=>(df[!, "DVAR9"] .+ 2.5, -20.),
+        "DVAR14"=>(0.055, 0.075),
+    )
+
+    return hcat(
+        DataFrame.(
+            colname=>dynamicminmax_fit_transform(
+                df[!, colname],
+                mins_and_maxes[colname]...
+            )
+            for colname in names(df)
+        )...
+    )
 end
 
 

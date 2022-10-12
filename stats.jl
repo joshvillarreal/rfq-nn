@@ -1,4 +1,5 @@
-using Flux;
+using Flux
+using Statistics
 
 
 # rsquared
@@ -38,6 +39,11 @@ function adjustedr2score_multidim(ys, ŷs, p::Int16, multioutput::String="unifo
     else
         error("multioutput must be one of \"rawvalues\" or \"uniformaverage\"")
     end
+end
+
+# mape
+function mape(yvec, ŷvec)
+    return Statistics.mean((broadcast(abs, ŷvec-yvec) ./ broadcast(abs, yvec)))
 end
 
 

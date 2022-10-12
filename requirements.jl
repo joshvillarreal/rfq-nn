@@ -3,6 +3,8 @@ using Pkg
 Pkg.add(
     [
         "ArgParse",
+        "BSON",
+        "CSV",
         "DataFrames",
         "Distributions",
         "Flux",
@@ -12,6 +14,7 @@ Pkg.add(
         "Parameters",
         "Plots",
         "StatsBase",
-        "StatsPlots"
+        "StatsPlots",
+        "Tables"
     ]
 )

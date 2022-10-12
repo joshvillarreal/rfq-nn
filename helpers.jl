@@ -98,3 +98,5 @@ function stratifylearningrate(specified_min::Float64, specified_max::Float64, n:
         logstepsize = Float64((log10(specified_max) - log10(specified_min)) / (n - 1))
         result = [specified_min + 10^(stepsize + (i-1)) for i in 1:n-1]
         return unique(result)
+    end
+end
