@@ -247,37 +247,38 @@ function main()
 
     # training
     println("Beginning training...")
-    # Threads.@sync begin
-        # Threads.@threads for ...
-    for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
-        if log_training_starts
-            # println("training width=$width, depth=$depth on thread $(Threads.threadid())")
-            println("training width=$width, depth=$depth")
+    Threads.@sync begin
+        for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
+            Threads.@spawn begin
+                if log_training_starts
+                    println("training width=$width, depth=$depth on thread $(Threads.threadid())")
+                    # println("training width=$width, depth=$depth")
+                end
+
+                cv_scores = crossvalidate(
+                    x_train, y_train;
+                    n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
+                    loss_function=loss_function, log_training=log_training_loss,
+                )
+
+                # recording results
+                outdata_dict = Dict(
+                    "configs"=>Dict(
+                        "n_folds"=>n_folds,
+                        "width"=>width,
+                        "depth"=>depth,
+                        "n_epochs"=>n_epochs,
+                        "batchsize"=>batchsize,
+                        "optimizer"=>"ADAM",
+                        "loss_function"=>loss_function_string
+                    ),
+                    "results"=>cv_scores
+                )
+
+                outdata[idx] = outdata_dict
+            end
         end
-
-        cv_scores = crossvalidate(
-            x_train, y_train;
-            n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
-            loss_function=loss_function, log_training=log_training_loss,
-        )
-
-        # recording results
-        outdata_dict = Dict(
-            "configs"=>Dict(
-                "n_folds"=>n_folds,
-                "width"=>width,
-                "depth"=>depth,
-                "n_epochs"=>n_epochs,
-                "batchsize"=>batchsize,
-                "optimizer"=>"ADAM",
-                "loss_function"=>loss_function_string
-            ),
-            "results"=>cv_scores
-        )
-
-        outdata[idx] = outdata_dict
     end
-    # end
 
     open(outfile, "a") do f
         JSON.print(f, outdata, 4)
