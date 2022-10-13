@@ -7,17 +7,6 @@ using Parameters: @with_kw
 include("helpers.jl")
 include("stats.jl")
 
-# TODO -- cleaner hyperparam object
-@with_kw struct HyperParams
-    width::Int16
-    depth::Int16
-    n_epochs::Int32
-    batchsize::Int
-    learning_rate::Float64
-    loss_function::Function
-    activation_function::Function
-end
-
 function neuralnetwork(x_dimension::Int16, y_dimension::Int16, width::Int16, depth::Int16)
     Chain(
         Dense(x_dimension, width, x->σ.(x)),
@@ -35,7 +24,9 @@ function buildandtrain(
     batchsize::Int=1024,
     learning_rate::Float64=0.0001
     loss_function=Flux.mse,
-    log_training::Bool=false
+    log_training::Bool=false,
+    early_stop_thresh::Int16=500,
+    early_stop_throttle::Float32=5.,
 )
     # batch data
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
@@ -49,20 +40,41 @@ function buildandtrain(
     training_losses = Float32[]
     epochs = Int32[]
 
-    for epoch in 1:n_epochs
-        Flux.train!(loss, Flux.params(m), data_loader, optimizer)
-        push!(epochs, epoch)
+    # count for early stopping
+    early_stop = 0
 
+    for epoch in 1:n_epochs
+        # update loss
         l = 0.
         for d in data_loader
             l += loss(d...)
         end
 
-        if log_training
-            println("epoch $epoch, loss=$l")
+        # callback for early stopping
+        evalcb = () -> (
+            push!(training_losses, l),
+            push!(epoch, epochs),
+            if log_training
+                println("epoch $epoch, loss=$l")
+            end
+        )
+
+        # training step
+        Flux.train!(loss, Flux.params(m), data_loader, optimizer; callback = throttle(evalcb, early_stop_throttle))
+        # push!(epochs, epoch)
+
+        # condition for early stopping
+        if training_losses[epoch] > training_losses[epoch-1]
+            early_stop += 1
+        end
+        if early_stop > early_stop_thresh
+            break
         end
 
-        push!(training_losses, l)
+        #= print current step
+        if log_training
+            println("epoch $epoch, loss=$l")
+        end =#
     end
 
     return m, training_losses
