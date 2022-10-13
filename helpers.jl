@@ -91,7 +91,7 @@ end =#
 
 # train test split
 function traintestsplit(x_df, y_df; train_frac::Float=0.8, read_in=false)
-    if not read_in
+    if !read_in
         data_size = nrow(x_df)
         train_size = trunc(Int, train_frac * data_size)
 
@@ -101,7 +101,7 @@ function traintestsplit(x_df, y_df; train_frac::Float=0.8, read_in=false)
         x_train_df = x_df[train_indexes, :]; x_test_df = x_df[test_indexes, :];
         y_train_df = y_df[train_indexes, :]; y_test_df = y_df[test_indexes, :];
     else
-        
+
     end
 
     return x_train_df, x_test_df, y_train_df, y_test_df
