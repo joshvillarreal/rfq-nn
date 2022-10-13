@@ -244,7 +244,10 @@ function main()
     end
 
     println("Formatting data...")
-    x_df, y_df = getrawdata(target_directory)
+    x_raw_df, y_df = getrawdata(target_directory)
+    
+    # decorrelating
+    x_df = decorrelatedvars(x_raw_df)
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)

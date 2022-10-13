@@ -1,5 +1,5 @@
 -- small number of widths, depths, epochs, CV folds --
-julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=3 --depth-range=2 3 --width-range=2 3 --depth-steps=2 --width-steps=2 --n-epochs=20 --log-training-starts=true --log-training-loss=true --log-folds=true
+julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=3 --depth-range=2 2 --width-range=2 3 --depth-steps=2 --width-steps=2 --n-epochs=20 --log-training-starts=true --log-training-loss=true --log-folds=true
 
 -- 2500 epochs. small number of widths, depths, but of practical size. 5 CV folds --
 julia -t auto grid_scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --depth-range=4 6 --width-range=50 100 --depth-steps=3 --width-steps=3 --n-epochs=2500

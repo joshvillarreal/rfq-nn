@@ -32,6 +32,44 @@ function readjsonsfromdirectory(target_directory::String, x_df, y_df)
     x_df, y_df
 end
 
+# decorrelating design variables
+function getdvarprime(data_to_transform, dynamic_lower_bound, strict_upper_bound)
+    (data_to_transform .- dynamic_lower_bound) ./ (strict_upper_bound .- dynamic_lower_bound)
+end
+
+function decorrelatedvars(df_raw)
+    maxes = Dict(
+        "DVAR3"=>160.,
+        "DVAR5"=>1.85,
+        "DVAR9"=>-25.,
+        "DVAR12"=>2.,
+        "DVAR13"=>-20.
+    )
+    etas = Dict(
+        "DVAR3"=>10.,
+        "DVAR5"=>0.05,
+        "DVAR9"=>2.5,
+        "DVAR12"=>0.05,
+        "DVAR13"=>2.5
+    )
+
+    DataFrame(
+        "DVAR1"=>df_raw[:, "DVAR1"],
+        "DVAR2"=>df_raw[:, "DVAR2"],
+        "DVAR3"=>getdvarprime(df_raw[:, "DVAR3"], etas["DVAR3"] .+ df_raw[:, "DVAR2"], maxes["DVAR3"]),
+        "DVAR4"=>df_raw[:, "DVAR4"],
+        "DVAR5"=>getdvarprime(df_raw[:, "DVAR5"], etas["DVAR5"] .+ df_raw[:, "DVAR4"], maxes["DVAR5"]),
+        "DVAR6"=>df_raw[:, "DVAR6"],
+        "DVAR7"=>df_raw[:, "DVAR7"],
+        "DVAR8"=>df_raw[:, "DVAR8"],
+        "DVAR9"=>getdvarprime(df_raw[:, "DVAR9"], etas["DVAR9"] .+ df_raw[:, "DVAR8"], maxes["DVAR9"]),
+        "DVAR10"=>df_raw[:, "DVAR10"],
+        "DVAR11"=>df_raw[:, "DVAR11"],
+        "DVAR12"=>getdvarprime(df_raw[:, "DVAR12"], etas["DVAR12"] .+ df_raw[:, "DVAR5"], maxes["DVAR12"]),
+        "DVAR13"=>getdvarprime(df_raw[:, "DVAR13"], etas["DVAR13"] .+ df_raw[:, "DVAR9"], maxes["DVAR13"]),
+        "DVAR14"=>df_raw[:, "DVAR14"]
+    )
+end
 
 # scaler
 mutable struct MinMaxScaler
