@@ -1,51 +1,13 @@
 using DataFrames;
 using JSON;
-using Statistics;
 
 
-# reading in data + sanity checking
-function getrawdata(target_directory::String)
-    x_raw_df = DataFrame(
-        DVAR1=Float32[],
-        DVAR2=Float32[],
-        DVAR3=Float32[],
-        DVAR4=Float32[],
-        DVAR5=Float32[],
-        DVAR6=Float32[],
-        DVAR7=Float32[],
-        DVAR8=Float32[],
-        DVAR9=Float32[],
-        DVAR10=Float32[],
-        DVAR11=Float32[],
-        DVAR12=Float32[],
-        DVAR13=Float32[],
-        DVAR14=Float32[]
-    )
-    y_raw_df = DataFrame(
-        OBJ1=Float32[],
-        OBJ2=Float32[],
-        OBJ3=Float32[],
-        OBJ4=Float32[],
-        OBJ5=Float32[],
-        OBJ6=Float32[]
-    )
-
-    try
-        x_raw_df, y_raw_df = readjsonsfromdirectory(target_directory, x_raw_df, y_raw_df)
-    catch e
-        println("You've entered an invalid target data directory.")
-    end
-        
-    return x_raw_df, y_raw_df
-end
-
-
-tofloat((k,v)) = k => parse(Float32, v)
+tofloat((k,v)) = k => parse(Float64, v)
 
 
 function readdataentry(sample, key)
     unformatted_data = Dict{String, Any}(sample[2][key])
-    return Dict{String, Float32}(Iterators.map(tofloat, pairs(unformatted_data)))
+    return Dict{String, Float64}(Iterators.map(tofloat, pairs(unformatted_data)))
 end
 
 
@@ -68,6 +30,39 @@ function readjsonsfromdirectory(target_directory::String, x_df, y_df)
     x_df, y_df
 end
 
+
+# scaler
+mutable struct MinMaxScaler
+    data_min::Float64
+    data_max::Float64
+end
+
+function fit!(scaler, data)
+    scaler.data_min = minimum(data); scaler.data_max = maximum(data)
+end
+
+function transform(scaler, data)
+    [2*(d - scaler.data_min)/(scaler.data_max - scaler.data_min) - 1 for d in data]
+end
+
+function inverse_transform(scaler, data_scaled)
+    [0.5*(scaler.data_max - scaler.data_min)*(d_s + 1) + scaler.data_min for d_s in data_scaled]
+end
+
+function fit_transform(data)
+    scaler = MinMaxScaler(0., 0.)
+    fit!(scaler, data)
+    transform(scaler, data)
+end
+
+
+# minmax scale data
+function minmaxscaledf(df)
+    return hcat(DataFrame.(colname=>fit_transform(df[!, colname]) for colname in names(df))...)
+end
+
+
+# train test split
 function traintestsplit(x_df, y_df, train_frac)
     data_size = nrow(x_df)
     train_size = trunc(Int, train_frac * data_size)
@@ -81,22 +76,27 @@ function traintestsplit(x_df, y_df, train_frac)
     return x_train_df, x_test_df, y_train_df, y_test_df
 end
 
-function stratifyarchitecturedimension(specified_min::Int16, specified_max::Int16, n::Int16=5)
-    if specified_min >= specified_max
-        return [specified_min]
-    else
-        stepsize = Int16((specified_max - specified_min) / (n - 1))
-        result = [Int16(floor(specified_min + stepsize * (i-1))) for i in 1:n-1]
-        return unique(result)
-    end
-end
 
-function stratifylearningrate(specified_min::Float64, specified_max::Float64, n::Int16=5)
+#= if storage becomes an issue
+function percentchangeinlastn(histories; n::Int=0)
+    history_length = size(histories)[1]
+    initial_index = history_length - n
+    initial = histories[initial_index]; final = histories[history_length]
+    return (final - initial) / initial
+end
+=#
+
+
+function stratifyarchitecturedimension(specified_min::Int, specified_max::Int, n::Int=5)
     if specified_min >= specified_max
         return [specified_min]
     else
-        logstepsize = Float64((log10(specified_max) - log10(specified_min)) / (n - 1))
-        result = [specified_min + 10^(stepsize + (i-1)) for i in 1:n-1]
+        stepsize = (specified_max - specified_min) / (n - 1)
+        result = []
+        for i in 1:n-1
+            push!(result, Int(floor(specified_min + stepsize * (i-1))))
+        end
+        push!(result, specified_max)
         return unique(result)
     end
 end

@@ -1,5 +1,4 @@
-using Flux
-using Statistics
+using Flux;
 
 
 # rsquared
@@ -24,12 +23,12 @@ end
 
 
 # adjusted rsquared
-function adjustedr2score(yvec, ŷvec, p::Int16)
+function adjustedr2score(yvec, ŷvec, p::Int)
     M = size(yvec, 1)
     return 1 - (1 - r2score(yvec, ŷvec)) * (M - 1) / (M - p - 1)
 end
 
-function adjustedr2score_multidim(ys, ŷs, p::Int16, multioutput::String="uniformaverage")
+function adjustedr2score_multidim(ys, ŷs, p::Int, multioutput::String="uniformaverage")
     d = size(ys, 2)
     adjustedr2score_rawvalues = [adjustedr2score(ys[:, i], ŷs[:, i], p) for i in 1:d]
     if multioutput == "rawvalues"
@@ -41,34 +40,29 @@ function adjustedr2score_multidim(ys, ŷs, p::Int16, multioutput::String="unifo
     end
 end
 
-# mape
-function mape(yvec, ŷvec)
-    return Statistics.mean((broadcast(abs, ŷvec-yvec) ./ broadcast(abs, yvec)))
-end
-
 
 # documenting scores
 function initscoresdict(n_folds; include_losses=false)
     scores_dict = Dict{String, Any}(
-        "r2score_train"=>Vector{Float32}(undef, n_folds),
-        "r2score_val"=>Vector{Float32}(undef, n_folds),
-        "adj_r2score_train"=>Vector{Float32}(undef, n_folds),
-        "adj_r2score_val"=>Vector{Float32}(undef, n_folds),
-        "mse_train"=>Vector{Float32}(undef, n_folds),
-        "mse_val"=>Vector{Float32}(undef, n_folds),
-        "mae_train"=>Vector{Float32}(undef, n_folds),
-        "mae_val"=>Vector{Float32}(undef, n_folds),
+        "r2score_train"=>Vector{Float64}(undef, n_folds),
+        "r2score_val"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_train"=>Vector{Float64}(undef, n_folds),
+        "adj_r2score_val"=>Vector{Float64}(undef, n_folds),
+        "mse_train"=>Vector{Float64}(undef, n_folds),
+        "mse_val"=>Vector{Float64}(undef, n_folds),
+        "mae_train"=>Vector{Float64}(undef, n_folds),
+        "mae_val"=>Vector{Float64}(undef, n_folds),
     )
 
     if include_losses
-        scores_dict["training_losses"] = Vector{Vector{Float32}}(undef, n_folds)
+        scores_dict["training_losses"] = Vector{Vector{Float64}}(undef, n_folds)
     end
 
     return scores_dict
 end
 
 
-function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, y_val_preds, n_features::Int16, training_losses=nothing)
+function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, y_val_preds, n_features::Int, training_losses=nothing)
     scores_dict["r2score_train"][fold_id] = r2score(y_train, y_train_preds)
     scores_dict["r2score_val"][fold_id] = r2score(y_val, y_val_preds)
 
