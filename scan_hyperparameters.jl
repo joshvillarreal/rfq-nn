@@ -176,11 +176,13 @@ function crossvalidate(
         y_train_temp, y_val_temp = y_train[train_temp_idxs[i], :], y_train[val_temp_idxs[i], :]
 
         # train model
+        start_time = time()
         m, training_losses = buildandtrain(
             x_train_temp, y_train_temp;
             width=width, depth=depth, n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
             loss_function=loss_function, log_training=log_training
         )
+        end_time = time()
 
         # gather predictions
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
@@ -188,7 +190,7 @@ function crossvalidate(
         # update aggregate scores
         updatescoresdict!(
             scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
-            size(x_train_temp, 2), training_losses
+            size(x_train_temp, 2), training_losses, end_time-start_time
         )
 
         # update scores by objective
@@ -252,7 +254,6 @@ function main()
             Threads.@spawn begin
                 if log_training_starts
                     println("training width=$width, depth=$depth on thread $(Threads.threadid())")
-                    # println("training width=$width, depth=$depth")
                 end
 
                 cv_scores = crossvalidate(
@@ -260,6 +261,7 @@ function main()
                     n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
                     loss_function=loss_function, log_training=log_training_loss,
                 )
+                
 
                 # recording results
                 outdata_dict = Dict(

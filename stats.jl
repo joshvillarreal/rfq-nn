@@ -62,6 +62,7 @@ function initscoresdict(n_folds; by_response=false)
 
     if !by_response
         scores_dict["training_losses"] = Vector{Vector{Float64}}(undef, n_folds)
+        scores_dict["training_times"] = Vector{Float64}(undef, n_folds)
     else
         scores_dict["mape_train"] = Vector{Float64}(undef, n_folds)
         scores_dict["mape_val"] = Vector{Float64}(undef, n_folds)
@@ -71,7 +72,17 @@ function initscoresdict(n_folds; by_response=false)
 end
 
 
-function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, y_val_preds, n_features::Int, training_losses=nothing)
+function updatescoresdict!(
+    scores_dict,
+    fold_id,
+    y_train,
+    y_train_preds,
+    y_val,
+    y_val_preds,
+    n_features::Int, 
+    training_losses=nothing,
+    dt=nothing
+)
     scores_dict["r2score_train"][fold_id] = r2score(y_train, y_train_preds)
     scores_dict["r2score_val"][fold_id] = r2score(y_val, y_val_preds)
 
@@ -86,6 +97,10 @@ function updatescoresdict!(scores_dict, fold_id, y_train, y_train_preds, y_val, 
 
     if training_losses != nothing
         scores_dict["training_losses"][fold_id] = training_losses
+    end
+
+    if dt != nothing
+        scores_dict["training_times"][fold_id] = dt
     end
 
     return scores_dict
