@@ -58,7 +58,10 @@ function parse_commandline()
             help = "Print training loss per epoch"
             arg_type = Bool
             default = false
-        # TODO: log each fold in CV ?
+        "--log-folds"
+            help = "Print status of each fold"
+            arg_type = Bool
+            default = false
     end
 
     return parse_args(s)
@@ -143,7 +146,7 @@ function buildandtrain(
         end
 
         if log_training
-            println("epoch $epoch, loss=$l")
+            println("    epoch $epoch, loss=$l")
         end
 
         push!(training_losses, l)
@@ -164,6 +167,7 @@ function crossvalidate(
     optimizer=ADAM(),
     loss_function=Flux.mse,
     log_training::Bool=false,
+    log_folds::Bool=false,
     y_scalers=nothing
 )
     scores_total = initscoresdict(n_folds; by_response=false)
@@ -172,6 +176,10 @@ function crossvalidate(
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
 
     for i in 1:n_folds
+        if log_folds
+            println("  - Fold $i of depth $depth and width $width")
+        end
+
         # select training and validation sets
         x_train_temp, x_val_temp = x_train[train_temp_idxs[i], :], x_train[val_temp_idxs[i], :]
         y_train_temp, y_val_temp = y_train[train_temp_idxs[i], :], y_train[val_temp_idxs[i], :]
@@ -221,6 +229,7 @@ function main()
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
     log_training_loss = parsed_args["log-training-loss"]
+    log_folds = parsed_args["log-folds"]
     n_folds = parsed_args["n-folds"]
     outfile = parsed_args["outfile"]
 
@@ -265,7 +274,8 @@ function main()
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
-                    loss_function=loss_function, log_training=log_training_loss, y_scalers=y_scalers
+                    loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
+                    y_scalers=y_scalers
                 )
                 
 
