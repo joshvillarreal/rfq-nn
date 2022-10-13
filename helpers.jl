@@ -114,12 +114,14 @@ end
 # train test split
 function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
     if !read_in
+        println("- Generating new train and test sets")
         data_size = nrow(x_df)
         train_size = trunc(Int, train_frac * data_size)
 
         train_indexes = sample(1:data_size, train_size, replace=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
+        println("- Using preexisting train and test sets")
         train_index_df = CSV.File("indexes/train_indexes.csv"; header=0) |> DataFrame
         test_index_df = CSV.File("indexes/test_indexes.csv"; header=0) |> DataFrame
 
