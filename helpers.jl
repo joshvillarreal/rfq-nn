@@ -56,22 +56,19 @@ function fit_transform(data)
 end
 
 function minmaxscaledf(df)
-    #= 
+    # return hcat(DataFrame.(colname=>fit_transform(df[!, colname]) for colname in names(df))...)
     scaled_data_dict = Dict(colname=>[] for colname in names(df))
-    scalers_dict = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
+    scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
 
     for colname in names(df)
-        scaler = MinMaxScaler(0., 0.)
         data = df[!, colname]
+        scaler = MinMaxScaler(0., 0.)
         fit!(scaler, data)
-        scaled_data = transform(scaler, data)
 
-        scalers_dict[colname] = scaler
-        scaled_data_dict[colname] = scaled_data
+        scaled_data_dict[colname] = transform(scaler, data)
+        scalers[colname] = scaler
     end
-
-    return hcat(DataFrame.(scaled_data_dict...)), scalers_dict =#
-    return hcat(DataFrame.(colname=>fit_transform(df[!, colname]) for colname in names(df))...)
+    return DataFrame(scaled_data_dict), scalers
 end
 
 #=

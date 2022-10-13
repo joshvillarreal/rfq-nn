@@ -164,6 +164,7 @@ function crossvalidate(
     optimizer=ADAM(),
     loss_function=Flux.mse,
     log_training::Bool=false,
+    y_scalers=nothing
 )
     scores_total = initscoresdict(n_folds; by_response=false)
     scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:6)
@@ -190,14 +191,16 @@ function crossvalidate(
         # update aggregate scores
         updatescoresdict!(
             scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
-            size(x_train_temp, 2), training_losses, end_time-start_time
+            size(x_train_temp, 2); training_losses=training_losses, dt=(end_time-start_time)
         )
 
         # update scores by objective
         for j in 1:6
+            y_scaler = y_scalers["OBJ$j"]
             updatescoresdict!(
                 scores_by_response["OBJ$j"], i, y_train_temp[:, j], y_train_temp_preds[:, j],
-                y_val_temp[:, j], y_val_temp_preds[:, j], size(x_train_temp, 2))
+                y_val_temp[:, j], y_val_temp_preds[:, j], size(x_train_temp, 2); y_scaler=y_scaler
+            )
         end
     end
     return Dict("total"=>scores_total, "by_response"=>scores_by_response)
@@ -228,13 +231,16 @@ function main()
     println("Formatting data...")
     x_df, y_df = getrawdata(target_directory)
 
-    x_scaled_df = minmaxscaledf(x_df)
-    y_scaled_df = minmaxscaledf(y_df)
+    x_scaled_df, _ = minmaxscaledf(x_df)
+    y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
     x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df, 0.8)
 
-    x_train = Matrix(x_train_df); x_test = Matrix(x_test_df);
-    y_train = Matrix(y_train_df); y_test = Matrix(y_test_df);
+    x_train = Float64.(Matrix(x_train_df))
+    x_test = Float64.(Matrix(x_test_df))
+    y_train = Float64.(Matrix(y_train_df))
+    y_test = Float64.(Matrix(y_test_df))
+
 
     # training parameters
     println("Preparing for training...")
@@ -253,13 +259,13 @@ function main()
         for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
             Threads.@spawn begin
                 if log_training_starts
-                    println("training width=$width, depth=$depth on thread $(Threads.threadid())")
+                    println("- Training width=$width, depth=$depth on thread $(Threads.threadid())")
                 end
 
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
-                    loss_function=loss_function, log_training=log_training_loss,
+                    loss_function=loss_function, log_training=log_training_loss, y_scalers=y_scalers
                 )
                 
 
@@ -280,7 +286,7 @@ function main()
                 outdata[idx] = outdata_dict
             end
         end
-    end
+    end 
 
     open(outfile, "a") do f
         JSON.print(f, outdata, 4)

@@ -1,5 +1,7 @@
 using Flux;
+using Statistics;
 
+include("helpers.jl")
 
 # rsquared
 function r2score(yvec, ŷvec)
@@ -42,8 +44,10 @@ end
 
 
 # mape
-function mape(yvec, ŷvec)
-    println("mape")
+function mape(yvec, ŷvec, y_scaler)
+    yvec_unscaled = inverse_transform(y_scaler, yvec)
+    ŷvec_unscaled = inverse_transform(y_scaler, ŷvec)
+    Statistics.mean((broadcast(abs, ŷvec_unscaled-yvec_unscaled) ./ broadcast(abs, yvec_unscaled)))
 end
 
 
@@ -79,9 +83,10 @@ function updatescoresdict!(
     y_train_preds,
     y_val,
     y_val_preds,
-    n_features::Int, 
+    n_features::Int;
     training_losses=nothing,
-    dt=nothing
+    dt=nothing,
+    y_scaler=nothing,
 )
     scores_dict["r2score_train"][fold_id] = r2score(y_train, y_train_preds)
     scores_dict["r2score_val"][fold_id] = r2score(y_val, y_val_preds)
@@ -101,6 +106,11 @@ function updatescoresdict!(
 
     if dt != nothing
         scores_dict["training_times"][fold_id] = dt
+    end
+
+    if y_scaler != nothing
+        scores_dict["mape_train"][fold_id] = mape(y_train, y_train_preds, y_scaler)
+        scores_dict["mape_val"][fold_id] = mape(y_val, y_val_preds, y_scaler)
     end
 
     return scores_dict
