@@ -41,8 +41,14 @@ function adjustedr2score_multidim(ys, ŷs, p::Int, multioutput::String="uniform
 end
 
 
+# mape
+function mape(yvec, ŷvec)
+    println("mape")
+end
+
+
 # documenting scores
-function initscoresdict(n_folds; include_losses=false)
+function initscoresdict(n_folds; by_response=false)
     scores_dict = Dict{String, Any}(
         "r2score_train"=>Vector{Float64}(undef, n_folds),
         "r2score_val"=>Vector{Float64}(undef, n_folds),
@@ -54,8 +60,11 @@ function initscoresdict(n_folds; include_losses=false)
         "mae_val"=>Vector{Float64}(undef, n_folds),
     )
 
-    if include_losses
+    if !by_response
         scores_dict["training_losses"] = Vector{Vector{Float64}}(undef, n_folds)
+    else
+        scores_dict["mape_train"] = Vector{Float64}(undef, n_folds)
+        scores_dict["mape_val"] = Vector{Float64}(undef, n_folds)
     end
 
     return scores_dict

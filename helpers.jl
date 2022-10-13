@@ -55,11 +55,40 @@ function fit_transform(data)
     transform(scaler, data)
 end
 
-
-# minmax scale data
 function minmaxscaledf(df)
+    #= 
+    scaled_data_dict = Dict(colname=>[] for colname in names(df))
+    scalers_dict = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
+
+    for colname in names(df)
+        scaler = MinMaxScaler(0., 0.)
+        data = df[!, colname]
+        fit!(scaler, data)
+        scaled_data = transform(scaler, data)
+
+        scalers_dict[colname] = scaler
+        scaled_data_dict[colname] = scaled_data
+    end
+
+    return hcat(DataFrame.(scaled_data_dict...)), scalers_dict =#
     return hcat(DataFrame.(colname=>fit_transform(df[!, colname]) for colname in names(df))...)
 end
+
+#=
+function minmaxunscaledf(df, scalers_dict)
+    unscaled_data_dict = Dict(colname=>[] for colname in names(df))
+
+    for colname in names(df)
+        println("Unscaling column $colname")
+        scaler = scalers_dict[colname]
+        data = df[!, colname]
+        unscaled_data = inverse_transform(scaler, data)
+
+        unscaled_data_dict[colname] = unscaled_data
+    end
+
+    return hcat(DataFrame.(unscaled_data_dict...))
+end =#
 
 
 # train test split

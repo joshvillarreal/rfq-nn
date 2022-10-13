@@ -4,9 +4,7 @@ using Flux
 import JSON
 using LinearAlgebra
 using MLUtils
-using Plots
 using StatsBase
-using StatsPlots
 
 include("helpers.jl")
 include("stats.jl")
@@ -165,10 +163,10 @@ function crossvalidate(
     batchsize::Int=1024,
     optimizer=ADAM(),
     loss_function=Flux.mse,
-    log_training::Bool=false
+    log_training::Bool=false,
 )
-    scores_total = initscoresdict(n_folds; include_losses=true)
-    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds) for i in 1:6)
+    scores_total = initscoresdict(n_folds; by_response=false)
+    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:6)
 
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
 
@@ -207,6 +205,7 @@ end
 
 function main()
     # gather arguments
+    println("Gathering arguments...")
     parsed_args = parse_commandline()
     target_directory = parsed_args["data-directory"]
     depth_range = [parse(Int64, s) for s in parsed_args["depth-range"]]
@@ -224,6 +223,7 @@ function main()
         throw("Outfile must be a .json file")
     end
 
+    println("Formatting data...")
     x_df, y_df = getrawdata(target_directory)
 
     x_scaled_df = minmaxscaledf(x_df)
@@ -231,11 +231,11 @@ function main()
 
     x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df, 0.8)
 
-    # format to arrays
     x_train = Matrix(x_train_df); x_test = Matrix(x_test_df);
     y_train = Matrix(y_train_df); y_test = Matrix(y_test_df);
 
     # training parameters
+    println("Preparing for training...")
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsize = 1024
@@ -246,35 +246,38 @@ function main()
     outdata = Vector{Dict}(undef, length(depths)*length(widths))
 
     # training
-    Threads.@sync begin
-        Threads.@threads for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
-            if log_training_starts
-                println("training width=$width, depth=$depth on thread $(Threads.threadid())")
-            end
-
-            cv_scores = crossvalidate(
-                x_train, y_train;
-                n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
-                loss_function=loss_function, log_training=log_training_loss
-            )
-
-            # recording results
-            outdata_dict = Dict(
-                "configs"=>Dict(
-                    "n_folds"=>n_folds,
-                    "width"=>width,
-                    "depth"=>depth,
-                    "n_epochs"=>n_epochs,
-                    "batchsize"=>batchsize,
-                    "optimizer"=>"ADAM",
-                    "loss_function"=>loss_function_string
-                ),
-                "results"=>cv_scores
-            )
-
-            outdata[idx] = outdata_dict
+    println("Beginning training...")
+    # Threads.@sync begin
+        # Threads.@threads for ...
+    for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
+        if log_training_starts
+            # println("training width=$width, depth=$depth on thread $(Threads.threadid())")
+            println("training width=$width, depth=$depth")
         end
+
+        cv_scores = crossvalidate(
+            x_train, y_train;
+            n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
+            loss_function=loss_function, log_training=log_training_loss,
+        )
+
+        # recording results
+        outdata_dict = Dict(
+            "configs"=>Dict(
+                "n_folds"=>n_folds,
+                "width"=>width,
+                "depth"=>depth,
+                "n_epochs"=>n_epochs,
+                "batchsize"=>batchsize,
+                "optimizer"=>"ADAM",
+                "loss_function"=>loss_function_string
+            ),
+            "results"=>cv_scores
+        )
+
+        outdata[idx] = outdata_dict
     end
+    # end
 
     open(outfile, "a") do f
         JSON.print(f, outdata, 4)
