@@ -1,3 +1,4 @@
+using CSV;
 using DataFrames;
 using Dates;
 using JSON;
@@ -90,19 +91,24 @@ end =#
 
 
 # train test split
-function traintestsplit(x_df, y_df; train_frac::Float=0.8, read_in=false)
+function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
     if !read_in
         data_size = nrow(x_df)
         train_size = trunc(Int, train_frac * data_size)
 
         train_indexes = sample(1:data_size, train_size, replace=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
-
-        x_train_df = x_df[train_indexes, :]; x_test_df = x_df[test_indexes, :];
-        y_train_df = y_df[train_indexes, :]; y_test_df = y_df[test_indexes, :];
     else
+        # train_indexes = CSV.parsefile("indexes/train_indexes.csv")
+        train_index_df = CSV.File("indexes/train_indexes.csv"; header=0) |> DataFrame
+        test_index_df = CSV.File("indexes/test_indexes.csv"; header=0) |> DataFrame
 
+        train_indexes = train_index_df[:, "Column1"]
+        test_indexes = test_index_df[:, "Column1"]
     end
+
+    x_train_df = x_df[train_indexes, :]; x_test_df = x_df[test_indexes, :];
+    y_train_df = y_df[train_indexes, :]; y_test_df = y_df[test_indexes, :];
 
     return x_train_df, x_test_df, y_train_df, y_test_df
 end
