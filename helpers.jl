@@ -1,4 +1,5 @@
 using DataFrames;
+using Dates;
 using JSON;
 
 
@@ -126,3 +127,12 @@ function stratifyarchitecturedimension(specified_min::Int, specified_max::Int, n
         return unique(result)
     end
 end
+
+function stringnow()
+    Dates.format(now(), "yyyy-mm-dd_HH:MM:SS")
+end
+
+function generatemodelid(width::Int, depth::Int)
+    stringnow() * "_w=$width" * "_d=$depth"
+end
+

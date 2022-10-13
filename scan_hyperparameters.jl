@@ -1,4 +1,5 @@
 using ArgParse
+using BSON: @save
 using DataFrames
 using Flux
 import JSON
@@ -123,7 +124,8 @@ function buildandtrain(
     batchsize::Int=1024,
     optimizer=ADAM(),
     loss_function=Flux.mse,
-    log_training::Bool=false
+    log_training::Bool=false,
+    model_id::String=""
 )
     # batch data
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
@@ -152,6 +154,9 @@ function buildandtrain(
         push!(training_losses, l)
     end
 
+    # save model
+    @save "models/$model_id.bson" m
+
     return m, training_losses
 end
 
@@ -168,6 +173,7 @@ function crossvalidate(
     loss_function=Flux.mse,
     log_training::Bool=false,
     log_folds::Bool=false,
+    model_id::String="",
     y_scalers=nothing
 )
     scores_total = initscoresdict(n_folds; by_response=false)
@@ -189,7 +195,7 @@ function crossvalidate(
         m, training_losses = buildandtrain(
             x_train_temp, y_train_temp;
             width=width, depth=depth, n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
-            loss_function=loss_function, log_training=log_training
+            loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i")
         )
         end_time = time()
 
@@ -271,16 +277,17 @@ function main()
                     println("- Training width=$width, depth=$depth on thread $(Threads.threadid())")
                 end
 
+                model_id = generatemodelid(width, depth)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
                     loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
-                    y_scalers=y_scalers
+                    model_id=model_id, y_scalers=y_scalers
                 )
                 
-
                 # recording results
                 outdata_dict = Dict(
+                    "model_id"=>model_id,
                     "configs"=>Dict(
                         "n_folds"=>n_folds,
                         "width"=>width,
@@ -296,9 +303,9 @@ function main()
                 outdata[idx] = outdata_dict
             end
         end
-    end 
+    end
 
-    open(outfile, "a") do f
+    open("results/$(stringnow())_" * outfile, "a") do f
         JSON.print(f, outdata, 4)
     end
 
