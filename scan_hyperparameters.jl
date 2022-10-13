@@ -249,7 +249,7 @@ function main()
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
-    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df, 0.8)
+    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=true)
 
     x_train = Float64.(Matrix(x_train_df))
     x_test = Float64.(Matrix(x_test_df))
