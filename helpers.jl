@@ -58,7 +58,6 @@ function fit_transform(data)
 end
 
 function minmaxscaledf(df)
-    # return hcat(DataFrame.(colname=>fit_transform(df[!, colname]) for colname in names(df))...)
     scaled_data_dict = Dict(colname=>[] for colname in names(df))
     scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
 
@@ -73,22 +72,6 @@ function minmaxscaledf(df)
     return DataFrame(scaled_data_dict), scalers
 end
 
-#=
-function minmaxunscaledf(df, scalers_dict)
-    unscaled_data_dict = Dict(colname=>[] for colname in names(df))
-
-    for colname in names(df)
-        println("Unscaling column $colname")
-        scaler = scalers_dict[colname]
-        data = df[!, colname]
-        unscaled_data = inverse_transform(scaler, data)
-
-        unscaled_data_dict[colname] = unscaled_data
-    end
-
-    return hcat(DataFrame.(unscaled_data_dict...))
-end =#
-
 
 # train test split
 function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
@@ -99,7 +82,6 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
         train_indexes = sample(1:data_size, train_size, replace=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
-        # train_indexes = CSV.parsefile("indexes/train_indexes.csv")
         train_index_df = CSV.File("indexes/train_indexes.csv"; header=0) |> DataFrame
         test_index_df = CSV.File("indexes/test_indexes.csv"; header=0) |> DataFrame
 
@@ -112,16 +94,6 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
 
     return x_train_df, x_test_df, y_train_df, y_test_df
 end
-
-
-#= if storage becomes an issue
-function percentchangeinlastn(histories; n::Int=0)
-    history_length = size(histories)[1]
-    initial_index = history_length - n
-    initial = histories[initial_index]; final = histories[history_length]
-    return (final - initial) / initial
-end
-=#
 
 
 function stratifyarchitecturedimension(specified_min::Int, specified_max::Int, n::Int=5)
