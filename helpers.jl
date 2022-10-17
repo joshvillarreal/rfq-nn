@@ -1,7 +1,19 @@
 using CSV;
 using DataFrames;
 using Dates;
+using Flux;
 using JSON;
+
+
+function parseactivationfunctions(activation_function_strings)
+    activation_functions_dict = Dict(
+        "sigmoid" => x -> σ.(x),
+        "relu" => x -> relu.(x),
+        "tanh" => x -> tanh_fast.(x),
+    )
+
+    return [activation_functions_dict[afs] for afs in activation_function_strings]
+end
 
 
 tofloat((k,v)) = k => parse(Float64, v)
@@ -154,7 +166,7 @@ function stringnow()
     Dates.format(now(), "yyyy-mm-dd_HH:MM:SS")
 end
 
-function generatemodelid(width::Int, depth::Int)
-    stringnow() * "_w=$width" * "_d=$depth"
+function generatemodelid(width::Int, depth::Int, activation_function_string::String)
+    stringnow() * "_w=$width" * "_d=$depth" * "_activation=$activation_function_string"
 end
 

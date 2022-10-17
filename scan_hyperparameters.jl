@@ -39,6 +39,10 @@ function parse_commandline()
             help = "Number of widths to search over in specified width-range"
             arg_type = Int
             default = 5
+        "--activation-functions"
+            help = "Activation function to use. Can be one of \"sigmoid\", \"relu\", \"tanh\""
+            nargs = '*'
+            default = ["sigmoid"]
         "--n-epochs"
             help = "Number of epochs to train each model on"
             arg_type = Int
@@ -106,10 +110,10 @@ function getrawdata(target_directory::String)
 end
 
 
-function neuralnetwork(x_dimension::Int, y_dimension::Int, width::Int, depth::Int)
+function neuralnetwork(x_dimension::Int, y_dimension::Int, width::Int, depth::Int, activation_function)
     Chain(
-        Dense(x_dimension, width, x->σ.(x)),
-        (Dense(width, width, x->σ.(x)) for _ in 1:depth)...,
+        Dense(x_dimension, width, x->activation_function(x)),
+        (Dense(width, width, x->activation_function(x)) for _ in 1:depth)...,
         Dense(width, y_dimension)
     )
 end
@@ -120,6 +124,7 @@ function buildandtrain(
     y_train;
     width::Int,
     depth::Int,
+    activation_function,
     n_epochs::Int=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
@@ -131,7 +136,7 @@ function buildandtrain(
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
     
     # instantiating the model
-    m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth)
+    m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function)
 
     # training
     loss(x, y) = loss_function(m(x), y)
@@ -167,6 +172,7 @@ function crossvalidate(
     n_folds::Int=5,
     width::Int,
     depth::Int,
+    activation_function,
     n_epochs::Int=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
@@ -183,7 +189,7 @@ function crossvalidate(
 
     for i in 1:n_folds
         if log_folds
-            println("  - Fold $i of depth $depth and width $width")
+            println("  - Fold $i of $model_id")
         end
 
         # select training and validation sets
@@ -194,7 +200,8 @@ function crossvalidate(
         start_time = time()
         m, training_losses = buildandtrain(
             x_train_temp, y_train_temp;
-            width=width, depth=depth, n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
+            width=width, depth=depth, activation_function=activation_function,
+            n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
             loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i")
         )
         end_time = time()
@@ -231,6 +238,7 @@ function main()
     width_range = [parse(Int64, s) for s in parsed_args["width-range"]]
     depth_steps = parsed_args["depth-steps"]
     width_steps = parsed_args["width-steps"]
+    activation_function_strings = parsed_args["activation-functions"]
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
@@ -269,21 +277,23 @@ function main()
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
-    outdata = Vector{Dict}(undef, length(depths)*length(widths))
+    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings))
 
     # training
     println("Beginning training...")
     Threads.@sync begin
-        for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
+        for (idx, (width, depth, activation_function_string)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings)))
             Threads.@spawn begin
                 if log_training_starts
-                    println("- Training width=$width, depth=$depth on thread $(Threads.threadid())")
+                    println("- Training width=$width, depth=$depth, activation=$activation_function_string on thread $(Threads.threadid())")
                 end
 
-                model_id = generatemodelid(width, depth)
+                activation_function = parseactivationfunctions([activation_function_string])[1]
+
+                model_id = generatemodelid(width, depth, activation_function_string)
                 cv_scores = crossvalidate(
                     x_train, y_train;
-                    n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
+                    n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
                     loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
                     model_id=model_id, y_scalers=y_scalers
                 )
@@ -295,6 +305,7 @@ function main()
                         "n_folds"=>n_folds,
                         "width"=>width,
                         "depth"=>depth,
+                        "activation_function"=>activation_function_string,
                         "n_epochs"=>n_epochs,
                         "batchsize"=>batchsize,
                         "optimizer"=>"ADAM",
