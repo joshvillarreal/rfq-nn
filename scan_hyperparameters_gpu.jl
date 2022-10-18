@@ -7,7 +7,7 @@ using LinearAlgebra
 using MLUtils
 using StatsBase
 using CUDA
-using BenchmarkTools: @btime
+#using BenchmarkTools: @btime
 
 include("helpers.jl")
 include("stats.jl")
@@ -146,7 +146,7 @@ function buildandtrain(
     training_losses = Float64[]
     epochs = Int64[]
 
-    @btime for epoch in 1:n_epochs
+    for epoch in 1:n_epochs
 
     	l = 0.0
 
@@ -297,7 +297,7 @@ function main()
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
 
-                model_id = generatemodelid(width, depth, activation_function_string)
+                model_id = generatemodelid(width, depth, activation_function_string, batchsize)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
