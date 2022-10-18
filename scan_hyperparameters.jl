@@ -184,6 +184,7 @@ function crossvalidate(
     for i in 1:n_folds
         if log_folds
             println("  - Fold $i of depth $depth and width $width")
+            println("-- thread $(Threads.threadid())")
         end
 
         # select training and validation sets
@@ -273,39 +274,35 @@ function main()
 
     # training
     println("Beginning training...")
-    Threads.@sync begin
-        for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
-            Threads.@spawn begin
-                if log_training_starts
-                    println("- Training width=$width, depth=$depth on thread $(Threads.threadid())")
-                end
-
-                model_id = generatemodelid(width, depth)
-                cv_scores = crossvalidate(
-                    x_train, y_train;
-                    n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
-                    loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
-                    model_id=model_id, y_scalers=y_scalers
-                )
-                
-                # recording results
-                outdata_dict = Dict(
-                    "model_id"=>model_id,
-                    "configs"=>Dict(
-                        "n_folds"=>n_folds,
-                        "width"=>width,
-                        "depth"=>depth,
-                        "n_epochs"=>n_epochs,
-                        "batchsize"=>batchsize,
-                        "optimizer"=>"ADAM",
-                        "loss_function"=>loss_function_string
-                    ),
-                    "results"=>cv_scores
-                )
-
-                outdata[idx] = outdata_dict
+    println("Available Threads:$(Threads.nthreads())")
+    Threads.@threads for (idx, (width, depth)) in collect(enumerate(Iterators.product(widths, depths)))
+            if log_training_starts
+                println("- Training width=$width, depth=$depth on thread $(Threads.threadid())")
             end
-        end
+            model_id = generatemodelid(width, depth)
+            cv_scores = crossvalidate(
+                x_train, y_train;
+                n_folds=n_folds, width=width, depth=depth, n_epochs=n_epochs, 
+                loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
+                model_id=model_id, y_scalers=y_scalers
+            )
+            
+            # recording results
+            outdata_dict = Dict(
+                "model_id"=>model_id,
+                "configs"=>Dict(
+                    "n_folds"=>n_folds,
+                    "width"=>width,
+                    "depth"=>depth,
+                    "n_epochs"=>n_epochs,
+                    "batchsize"=>batchsize,
+                    "optimizer"=>"ADAM",
+                    "loss_function"=>loss_function_string
+                ),
+                "results"=>cv_scores
+            )
+
+            outdata[idx] = outdata_dict
     end
 
     open("results/$(stringnow())_" * outfile, "a") do f
