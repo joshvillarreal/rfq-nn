@@ -43,6 +43,14 @@ function parse_commandline()
             help = "Activation function to use. Can be one of \"sigmoid\", \"relu\", \"tanh\""
             nargs = '*'
             default = ["sigmoid"]
+        "--batch-size-range"
+            help = "Range of batch sizes to search over (values should be integer powers ot 2)"
+            nargs = '*'
+            default = ["512", "2048"]
+        "--batch-size-steps"
+            help = "Number of batch sizes to search over in specified batch-size-range"
+            arg_type = Int
+            default = 2
         "--n-epochs"
             help = "Number of epochs to train each model on"
             arg_type = Int
@@ -239,6 +247,8 @@ function main()
     depth_steps = parsed_args["depth-steps"]
     width_steps = parsed_args["width-steps"]
     activation_function_strings = parsed_args["activation-functions"]
+    batch_size_range = [parse(Int64, s) for s in parsed_args["batch-size-range"]]
+    batch_size_steps = parsed_args["batch-size-steps"]
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
@@ -272,29 +282,30 @@ function main()
     println("Preparing for training...")
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
-    batchsize = 1024
-    optimizer=ADAM() # can't change this for now
+    batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps)]
+    optimizer = ADAM() # can't change this for now
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
-    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings))
+    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings)*length(batchsizes))
 
     # training
+    # TODO threading -- looking into polyesther library? 
     println("Beginning training...")
     Threads.@sync begin
-        for (idx, (width, depth, activation_function_string)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings)))
+        for (idx, (width, depth, activation_function_string, batchsize)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes)))
             Threads.@spawn begin
                 if log_training_starts
-                    println("- Training width=$width, depth=$depth, activation=$activation_function_string on thread $(Threads.threadid())")
+                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize on thread $(Threads.threadid())")
                 end
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
 
-                model_id = generatemodelid(width, depth, activation_function_string)
+                model_id = generatemodelid(width, depth, activation_function_string, batchsize)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
-                    loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
+                    batchsize=batchsize, loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
                     model_id=model_id, y_scalers=y_scalers
                 )
                 
