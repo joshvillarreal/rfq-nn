@@ -2,7 +2,7 @@
 julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=3 --depth-range=2 3 --width-range=2 3 --depth-steps=2 --width-steps=2 --n-epochs=20 --log-training-starts=true --log-training-loss=true --log-folds=true
 
 -- short width and depth, but all three activationf unctions, 2 CV folds
-julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=3 --depth-range=2 2 --width-range=3 3 --depth-steps=2 --width-steps=2 --activation-functions=sigmoid relu tanh --n-epochs=20 --log-training-starts=true --log-training-loss=true --log-folds=true
+julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=3 --depth-range=2 2 --width-range=3 3 --depth-steps=2 --width-steps=2 --activation-functions=sigmoid relu tanh --batch-size-range=256 1024 --batch-size-steps=3 --n-epochs=20 --log-training-starts=true --log-training-loss=true --log-folds=true
 
 -- Script 1: depth 4; widths 100, 150, 200; 2500 epochs; 5 CV folds --
 julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=5 --depth-range=4 4 --width-range=100 200 --depth-steps=2 --width-steps=3 --n-epochs=2500 --log-training-starts=true --log-folds=true
