@@ -1,4 +1,5 @@
 using ArgParse
+using CUDA
 using BSON: @save
 using DataFrames
 using Flux
@@ -75,6 +76,9 @@ function parse_commandline()
             help = "Print status of each fold"
             arg_type = Bool
             default = false
+        "--gpu"
+            help = "Flag to use GPU for training"
+            action = :store_true
     end
 
     return parse_args(s)
@@ -143,34 +147,61 @@ function buildandtrain(
     # batch data
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
     
-    # instantiating the model
-    m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function)
+    # instantiating the model TODO -- GPU
+    use_gpu = false
+    if use_gpu
+        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function) |>
+    else
+        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function)
+    end
 
     # training
     loss(x, y) = loss_function(m(x), y)
     training_losses = Float64[]
     epochs = Int64[]
 
-    for epoch in 1:n_epochs
-        Flux.train!(loss, Flux.params(m), data_loader, optimizer)
-        push!(epochs, epoch)
-
-        l = 0.
-        for d in data_loader
-            l += loss(d...)
-        end
-
-        if log_training
+    if use_gpu
+        for epoch in 1:n_epochs
+            l = 0.0
+    
+            for (xtrain_batch, ytrain_batch) in data_loader
+                x_gpu, y_gpu = gpu(xtrain_batch), gpu(ytrain_batch)
+                gs = gradient(Flux.params(m)) do
+                    l += loss(x_gpu, y_gpu)
+                end
+                Flux.Optimise.update!(optimizer, Flux.params(m), gs)
+            end
+        
+            push!(epochs, epoch)
+            push!(training_losses, l)
             println("    epoch $epoch, loss=$l")
         end
+    
+        # save model
+        @save "models/$model_id.bson" m = cpu(m)
+    
+        return m = cpu(m), training_losses
+    else
+        for epoch in 1:n_epochs
+            Flux.train!(loss, Flux.params(m), data_loader, optimizer)
 
-        push!(training_losses, l)
+            l = 0.
+            for d in data_loader
+                l += loss(d...)
+            end
+
+            push!(epochs, epoch)
+            push!(training_losses, l)
+            if log_training
+                println("    epoch $epoch, loss=$l")
+            end
+        end
+
+        # save model
+        @save "models/$model_id.bson" m
+
+        return m, training_losses
     end
-
-    # save model
-    @save "models/$model_id.bson" m
-
-    return m, training_losses
 end
 
 
@@ -256,6 +287,7 @@ function main()
     log_folds = parsed_args["log-folds"]
     n_folds = parsed_args["n-folds"]
     outfile = parsed_args["outfile"]
+    use_gpu = parsed_args["gpu"]
 
     if ~endswith(outfile, ".json")
         throw("Outfile must be a .json file")
