@@ -5,6 +5,7 @@ Pkg.add(
         "ArgParse",
         "BSON",
         "CSV",
+        "CUDA",
         "DataFrames",
         "Distributions",
         "Flux",
