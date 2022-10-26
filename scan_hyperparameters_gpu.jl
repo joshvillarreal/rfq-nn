@@ -146,7 +146,7 @@ function buildandtrain(
     training_losses = Float64[]
     epochs = Int64[]
 
-    for epoch in 1:n_epochs
+    @time for epoch in 1:n_epochs
 
     	l = 0.0
 
@@ -288,9 +288,9 @@ function main()
 
     # training
     println("Beginning training...")
-    Threads.@sync begin
-        for (idx, (width, depth, activation_function_string)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings)))
-            Threads.@spawn begin
+    #Threads.@sync begin
+        Threads.@threads for (idx, (width, depth, activation_function_string)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings)))
+            #Threads.@spawn begin
                 if log_training_starts
                     println("- Training width=$width, depth=$depth, activation=$activation_function_string on thread $(Threads.threadid())")
                 end
@@ -322,8 +322,8 @@ function main()
                 )
 
                 outdata[idx] = outdata_dict
-            end
-        end
+            #end
+        #end
     end
 
     open("results/$(stringnow())_" * outfile, "a") do f
