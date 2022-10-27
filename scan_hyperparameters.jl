@@ -52,6 +52,14 @@ function parse_commandline()
             help = "Number of batch sizes to search over in specified batch-size-range"
             arg_type = Int
             default = 2
+        "--learning-rate-range"
+            help = "Range of learning rates to search over"
+            nargs = '*'
+            default = [0.0001, 0.01]
+        "--learning-rate-steps"
+            help = "Number of learning rates to search over in specified learning-rate-range"
+            arg_type = Int
+            default = 2
         "--n-epochs"
             help = "Number of epochs to train each model on"
             arg_type = Int
@@ -280,6 +288,8 @@ function main()
     activation_function_strings = parsed_args["activation-functions"]
     batch_size_range = [parse(Int64, s) for s in parsed_args["batch-size-range"]]
     batch_size_steps = parsed_args["batch-size-steps"]
+    learning_rate_range = [parse(Float64, s) for s in parsed_args["learning-rate-range"]]
+    learning_rate_steps = parsed_args["learning-rate-steps"]
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
@@ -315,7 +325,7 @@ function main()
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps)]
-    optimizer = ADAM() # can't change this for now
+    learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float(log10(learning_rate_range[1])), Float(log10(learning_rate_range[2])), learning_rate_steps)]
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
@@ -325,20 +335,21 @@ function main()
     # TODO threading -- looking into polyesther library? 
     println("Beginning training...")
     Threads.@sync begin
-        for (idx, (width, depth, activation_function_string, batchsize)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes)))
+        for (idx, (width, depth, activation_function_string, batchsize, learning_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates)))
             Threads.@spawn begin
                 if log_training_starts
                     println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize on thread $(Threads.threadid())")
                 end
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
+                optimizer = ADAM(learning_rate)
 
                 model_id = generatemodelid(width, depth, activation_function_string, batchsize)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
-                    batchsize=batchsize, loss_function=loss_function, log_training=log_training_loss, log_folds=log_folds,
-                    model_id=model_id, y_scalers=y_scalers
+                    batchsize=batchsize, optimizer=optimizer, loss_function=loss_function, log_training=log_training_loss,
+                    log_folds=log_folds, model_id=model_id, y_scalers=y_scalers
                 )
                 
                 # recording results
