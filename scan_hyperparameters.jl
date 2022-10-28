@@ -139,6 +139,24 @@ function neuralnetwork(x_dimension::Int, y_dimension::Int, width::Int, depth::In
 end
 
 
+function neuralnetworkwithdropout(x_dimension::Int, y_dimension::Int, width::Int, depth::Int, dropout_rate::Float, activation_function)
+    Chain(
+        Dense(x_dimension, width, x->activation_function(x)),
+        (Chain(
+            Dense(width, width, x->activation_function(x)),
+            Dropout(dropout_rate),
+        ) for _ in 1:depth)...,
+        Dense(width, y_dimension)
+    )
+end
+
+
+# TODO
+function neuralnetworkwithbatchnorm(x_dimension::Int, y_dimension::Int, width::Int, depth::Int, activation_function)
+    Chain()
+end
+
+
 function buildandtrain(
     x_train,
     y_train;
@@ -329,7 +347,7 @@ function main()
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
-    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings)*length(batchsizes))
+    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings)*length(batchsizes)*length(learning_rates))
 
     # training
     # TODO threading -- looking into polyesther library? 
@@ -338,13 +356,13 @@ function main()
         for (idx, (width, depth, activation_function_string, batchsize, learning_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates)))
             Threads.@spawn begin
                 if log_training_starts
-                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize on thread $(Threads.threadid())")
+                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize, learning_rate=$learning_rate on thread $(Threads.threadid())")
                 end
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
                 optimizer = ADAM(learning_rate)
 
-                model_id = generatemodelid(width, depth, activation_function_string, batchsize)
+                model_id = generatemodelid(width, depth, activation_function_string, batchsize, learning_rate)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
@@ -362,6 +380,7 @@ function main()
                         "activation_function"=>activation_function_string,
                         "n_epochs"=>n_epochs,
                         "batchsize"=>batchsize,
+                        "learning_rate"=>learning_rate,
                         "optimizer"=>"ADAM",
                         "loss_function"=>loss_function_string
                     ),
