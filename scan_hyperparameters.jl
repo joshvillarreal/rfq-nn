@@ -353,11 +353,11 @@ function main()
 
     # training parameters
     println("Preparing for training...")
-    depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
-    widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
-    batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps)]
-    learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float64(log10(learning_rate_range[1])), Float64(log10(learning_rate_range[2])), learning_rate_steps)]
-    dropout_rates = stratifyarchitecturedimension(dropout_rate_range[1], dropout_rate_range[2], dropout_rate_steps)
+    depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps; ints_only=true)
+    widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps; ints_only=true)
+    batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps; ints_only=true)]
+    learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float64(log10(learning_rate_range[1])), Float64(log10(learning_rate_range[2])), learning_rate_steps; ints_only=false)]
+    dropout_rates = stratifyarchitecturedimension(dropout_rate_range[1], dropout_rate_range[2], dropout_rate_steps; ints_only=false)
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container

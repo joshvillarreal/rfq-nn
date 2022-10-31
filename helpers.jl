@@ -148,15 +148,19 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
 end
 
 
-function stratifyarchitecturedimension(specified_min, specified_max, n::Int=5)
+function stratifyarchitecturedimension(specified_min, specified_max, n::Int=5; ints_only::Bool=false)
     if specified_min >= specified_max
         return [specified_min]
     else
-        result_type = typeof(specified_min)
         stepsize = (specified_max - specified_min) / (n - 1)
         result = []
+
         for i in 1:n-1
-            push!(result, result_type(floor(specified_min + stepsize * (i-1))))
+            if ints_only
+                push!(result, Int(floor(specified_min + stepsize * (i-1))))
+            else
+                push!(result, (specified_min + stepsize * (i-1)))
+            end
         end
         push!(result, specified_max)
         return unique(result)
