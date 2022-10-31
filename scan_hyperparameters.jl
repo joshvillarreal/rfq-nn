@@ -139,7 +139,7 @@ function neuralnetwork(x_dimension::Int, y_dimension::Int, width::Int, depth::In
 end
 
 
-function neuralnetworkwithdropout(x_dimension::Int, y_dimension::Int, width::Int, depth::Int, dropout_rate::Float, activation_function)
+function neuralnetworkwithdropout(x_dimension::Int, y_dimension::Int, width::Int, depth::Int, dropout_rate::Float64, activation_function)
     Chain(
         Dense(x_dimension, width, x->activation_function(x)),
         (Chain(
@@ -176,7 +176,7 @@ function buildandtrain(
     # instantiating the model TODO -- GPU
     use_gpu = false
     if use_gpu
-        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function) |>
+        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function) |> gpu
     else
         m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function)
     end
@@ -343,7 +343,7 @@ function main()
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps)]
-    learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float(log10(learning_rate_range[1])), Float(log10(learning_rate_range[2])), learning_rate_steps)]
+    learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float64(log10(learning_rate_range[1])), Float64(log10(learning_rate_range[2])), learning_rate_steps)]
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
