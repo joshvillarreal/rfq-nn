@@ -366,45 +366,41 @@ function main()
     # training
     # TODO threading -- looking into polyesther library? 
     println("Beginning training...")
-    Threads.@sync begin
-        for (idx, (width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates, dropout_rates)))
-            Threads.@spawn begin
-                if log_training_starts
-                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize, learning_rate=$learning_rate, dropout_rate=$dropout_rate on thread $(Threads.threadid())")
-                end
-
-                activation_function = parseactivationfunctions([activation_function_string])[1]
-                optimizer = ADAM(learning_rate)
-
-                model_id = generatemodelid(width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)
-                cv_scores = crossvalidate(
-                    x_train, y_train;
-                    n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
-                    batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
-                    log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
-                )
-                
-                # recording results
-                outdata_dict = Dict(
-                    "model_id"=>model_id,
-                    "configs"=>Dict(
-                        "n_folds"=>n_folds,
-                        "width"=>width,
-                        "depth"=>depth,
-                        "activation_function"=>activation_function_string,
-                        "n_epochs"=>n_epochs,
-                        "batchsize"=>batchsize,
-                        "learning_rate"=>learning_rate,
-                        "dropout_rate"=>dropout_rate,
-                        "optimizer"=>"ADAM",
-                        "loss_function"=>loss_function_string
-                    ),
-                    "results"=>cv_scores
-                )
-
-                outdata[idx] = outdata_dict
-            end
+    Threads.@threads for (idx, (width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates, dropout_rates)))
+        if log_training_starts
+            println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize, learning_rate=$learning_rate, dropout_rate=$dropout_rate on thread $(Threads.threadid())")
         end
+
+        activation_function = parseactivationfunctions([activation_function_string])[1]
+        optimizer = ADAM(learning_rate)
+
+        model_id = generatemodelid(width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)
+        cv_scores = crossvalidate(
+            x_train, y_train;
+            n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
+            batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
+            log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
+        )
+        
+        # recording results
+        outdata_dict = Dict(
+            "model_id"=>model_id,
+            "configs"=>Dict(
+                "n_folds"=>n_folds,
+                "width"=>width,
+                "depth"=>depth,
+                "activation_function"=>activation_function_string,
+                "n_epochs"=>n_epochs,
+                "batchsize"=>batchsize,
+                "learning_rate"=>learning_rate,
+                "dropout_rate"=>dropout_rate,
+                "optimizer"=>"ADAM",
+                "loss_function"=>loss_function_string
+            ),
+            "results"=>cv_scores
+        )
+
+        outdata[idx] = outdata_dict
     end
 
     open("results/$(stringnow())_" * outfile, "a") do f
