@@ -177,13 +177,13 @@ function buildandtrain(
     dropout_rate::Float64=0.0,
     loss_function=Flux.mse,
     log_training::Bool=false,
-    model_id::String=""
+    model_id::String="",
+    use_gpu::Bool=false
 )
     # batch data
     data_loader = Flux.Data.DataLoader((x_train', y_train'), batchsize=batchsize, shuffle=true)
     
-    # instantiating the model TODO -- GPU
-    use_gpu = false
+    # init model
     if use_gpu
         m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function) |> gpu
     else
@@ -255,7 +255,8 @@ function crossvalidate(
     log_training::Bool=false,
     log_folds::Bool=false,
     model_id::String="",
-    y_scalers=nothing
+    y_scalers=nothing,
+    use_gpu::Bool=false
 )
     scores_total = initscoresdict(n_folds; by_response=false)
     scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:6)
@@ -277,7 +278,7 @@ function crossvalidate(
             x_train_temp, y_train_temp;
             width=width, depth=depth, activation_function=activation_function,
             n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate,
-            loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i")
+            loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i"), use_gpu=use_gpu
         )
         end_time = time()
 
@@ -380,7 +381,7 @@ function main()
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
                     batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
-                    log_folds=log_folds, model_id=model_id, y_scalers=y_scalers
+                    log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
                 )
                 
                 # recording results
@@ -394,6 +395,7 @@ function main()
                         "n_epochs"=>n_epochs,
                         "batchsize"=>batchsize,
                         "learning_rate"=>learning_rate,
+                        "dropout_rate"=>dropout_rate,
                         "optimizer"=>"ADAM",
                         "loss_function"=>loss_function_string
                     ),
