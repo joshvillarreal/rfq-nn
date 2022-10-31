@@ -60,6 +60,14 @@ function parse_commandline()
             help = "Number of learning rates to search over in specified learning-rate-range"
             arg_type = Int
             default = 2
+        "--dropout-rate-range"
+            help = "Range of dropout rates to search over"
+            nargs = '*'
+            default = [0., 0.]
+        "--dropout-rate-steps"
+            help = "Number of dropout rates to search over in specified dropout-rate-range"
+            arg_type = Int
+            default = 2
         "--n-epochs"
             help = "Number of epochs to train each model on"
             arg_type = Int
@@ -166,6 +174,7 @@ function buildandtrain(
     n_epochs::Int=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
+    dropout_rate::Float64=0.0,
     loss_function=Flux.mse,
     log_training::Bool=false,
     model_id::String=""
@@ -176,9 +185,9 @@ function buildandtrain(
     # instantiating the model TODO -- GPU
     use_gpu = false
     if use_gpu
-        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function) |> gpu
+        m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function) |> gpu
     else
-        m = neuralnetwork(size(x_train)[2], size(y_train)[2], width, depth, activation_function)
+        m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function)
     end
 
     # training
@@ -241,6 +250,7 @@ function crossvalidate(
     n_epochs::Int=100,
     batchsize::Int=1024,
     optimizer=ADAM(),
+    dropout_rate::Float64=0.,
     loss_function=Flux.mse,
     log_training::Bool=false,
     log_folds::Bool=false,
@@ -266,7 +276,7 @@ function crossvalidate(
         m, training_losses = buildandtrain(
             x_train_temp, y_train_temp;
             width=width, depth=depth, activation_function=activation_function,
-            n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer,
+            n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate,
             loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i")
         )
         end_time = time()
@@ -308,6 +318,8 @@ function main()
     batch_size_steps = parsed_args["batch-size-steps"]
     learning_rate_range = [parse(Float64, s) for s in parsed_args["learning-rate-range"]]
     learning_rate_steps = parsed_args["learning-rate-steps"]
+    dropout_rate_range = [parse(Float64, s) for s in parsed_args["dropout-rate-range"]]
+    dropout_rate_steps = parsed_args["dropout-rate-steps"]
     n_epochs = parsed_args["n-epochs"]
     loss_function_string = parsed_args["loss"]
     log_training_starts = parsed_args["log-training-starts"]
@@ -344,29 +356,30 @@ function main()
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps)
     batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps)]
     learning_rates = [10^loglr for loglr in stratifyarchitecturedimension(Float64(log10(learning_rate_range[1])), Float64(log10(learning_rate_range[2])), learning_rate_steps)]
+    dropout_rates = stratifyarchitecturedimension(dropout_rate_range[1], dropout_rate_range[2], dropout_rate_steps)
     loss_function = loss_function_string == "mse" ? Flux.mse : Flux.mae
 
     # instantiating outdata container
-    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings)*length(batchsizes)*length(learning_rates))
+    outdata = Vector{Dict}(undef, length(depths)*length(widths)*length(activation_function_strings)*length(batchsizes)*length(learning_rates)*length(dropout_rates))
 
     # training
     # TODO threading -- looking into polyesther library? 
     println("Beginning training...")
     Threads.@sync begin
-        for (idx, (width, depth, activation_function_string, batchsize, learning_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates)))
+        for (idx, (width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)) in collect(enumerate(Iterators.product(widths, depths, activation_function_strings, batchsizes, learning_rates, dropout_rates)))
             Threads.@spawn begin
                 if log_training_starts
-                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize, learning_rate=$learning_rate on thread $(Threads.threadid())")
+                    println("- Training width=$width, depth=$depth, activation=$activation_function_string, batchsize=$batchsize, learning_rate=$learning_rate, dropout_rate=$dropout_rate on thread $(Threads.threadid())")
                 end
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
                 optimizer = ADAM(learning_rate)
 
-                model_id = generatemodelid(width, depth, activation_function_string, batchsize, learning_rate)
+                model_id = generatemodelid(width, depth, activation_function_string, batchsize, learning_rate, dropout_rate)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
-                    batchsize=batchsize, optimizer=optimizer, loss_function=loss_function, log_training=log_training_loss,
+                    batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
                     log_folds=log_folds, model_id=model_id, y_scalers=y_scalers
                 )
                 

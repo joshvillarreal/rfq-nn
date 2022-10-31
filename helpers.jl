@@ -167,7 +167,7 @@ function stringnow()
     Dates.format(now(), "yyyy-mm-dd_HH:MM:SS")
 end
 
-function generatemodelid(width::Int, depth::Int, activation_function_string::String, batchsize::Int, learning_rate::Float64)
-    stringnow() * "_w=$width" * "_d=$depth" * "_activation=$activation_function_string" * "_bs=$batchsize" * "_lr=$learning_rate"
+function generatemodelid(width::Int, depth::Int, activation_function_string::String, batchsize::Int, learning_rate::Float64, dropout_rate::Float64)
+    stringnow() * "_w=$width" * "_d=$depth" * "_activation=$activation_function_string" * "_bs=$batchsize" * "_lr=$learning_rate" * "_dr=$dropout_rate"
 end
 
