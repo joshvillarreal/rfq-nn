@@ -172,6 +172,8 @@ function stringnow()
 end
 
 function generatemodelid(width::Int, depth::Int, activation_function_string::String, batchsize::Int, learning_rate::Float64, dropout_rate::Float64)
+    learning_rate = round(learning_rate; digits=7)
+    dropout_rate = round(dropout_rate; digits=7)
     stringnow() * "_w=$width" * "_d=$depth" * "_activation=$activation_function_string" * "_bs=$batchsize" * "_lr=$learning_rate" * "_dr=$dropout_rate"
 end
 

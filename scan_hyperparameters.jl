@@ -196,6 +196,7 @@ function buildandtrain(
     epochs = Int64[]
 
     if use_gpu
+        start_time = time()
         for epoch in 1:n_epochs
             l = 0.0
     
@@ -211,12 +212,14 @@ function buildandtrain(
             push!(training_losses, l)
             println("    epoch $epoch, loss=$l")
         end
-    
+        end_time = time()
+
         # save model
         @save "models/$model_id.bson" m = cpu(m)
     
-        return m = cpu(m), training_losses
+        return m = cpu(m), training_losses, end_time-start_time
     else
+        start_time = time()
         for epoch in 1:n_epochs
             Flux.train!(loss, Flux.params(m), data_loader, optimizer)
 
@@ -231,11 +234,12 @@ function buildandtrain(
                 println("    epoch $epoch, loss=$l")
             end
         end
+        end_time = time()
 
         # save model
         @save "models/$model_id.bson" m
 
-        return m, training_losses
+        return m, training_losses, end_time-start_time
     end
 end
 
@@ -273,14 +277,12 @@ function crossvalidate(
         y_train_temp, y_val_temp = y_train[train_temp_idxs[i], :], y_train[val_temp_idxs[i], :]
 
         # train model
-        start_time = time()
-        m, training_losses = buildandtrain(
+        m, training_losses, dt = buildandtrain(
             x_train_temp, y_train_temp;
             width=width, depth=depth, activation_function=activation_function,
             n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate,
             loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i"), use_gpu=use_gpu
         )
-        end_time = time()
 
         # gather predictions
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
@@ -288,7 +290,7 @@ function crossvalidate(
         # update aggregate scores
         updatescoresdict!(
             scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
-            size(x_train_temp, 2); training_losses=training_losses, dt=(end_time-start_time)
+            size(x_train_temp, 2); training_losses=training_losses, dt=dt
         )
 
         # update scores by objective
