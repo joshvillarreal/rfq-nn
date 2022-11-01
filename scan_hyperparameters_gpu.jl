@@ -297,7 +297,7 @@ function main()
 
                 activation_function = parseactivationfunctions([activation_function_string])[1]
 
-                model_id = generatemodelid(width, depth, activation_function_string, batchsize)
+                model_id = generatemodelid(width, depth, activation_function_string, batchsize, 0.0, 0.0)
                 cv_scores = crossvalidate(
                     x_train, y_train;
                     n_folds=n_folds, width=width, depth=depth, activation_function=activation_function, n_epochs=n_epochs, 
