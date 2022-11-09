@@ -7,8 +7,6 @@ import JSON
 using LinearAlgebra
 using MLUtils
 using StatsBase
-#using Profile
-#using PProf
 
 include("helpers_temp.jl")
 include("stats_temp.jl")
@@ -187,6 +185,10 @@ function buildandtrain(
     
     # init model
     if use_gpu
+        # Select GPU
+	gpus = [gpu_id for gpu_id in devices()]
+	device!(gpus[Threads.threadid()])
+	# Create NN and offload to GPU
         m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function) |> gpu
     else
         m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function)
@@ -291,7 +293,8 @@ function crossvalidate(
             x_train_temp, y_train_temp;
             width=width, depth=depth, activation_function=activation_function,
             n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate,
-            loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i"), use_gpu=use_gpu
+            loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i"),
+	    use_gpu=use_gpu
         )
 
         # gather predictions
@@ -318,6 +321,15 @@ end
 
 
 function main()
+    # Do sanity check that we have exaclty N Threads == N CUDA devices
+    if length(devices()) != Threads.nthreads()
+        println("N Threads must be equal N GPUs! Aborting...")
+	exit()
+    end
+
+    # Temp
+    println("Passed N Threads == N GPU sanity check!")
+
     # gather arguments
     println("Gathering arguments...")
     parsed_args = parse_commandline()
