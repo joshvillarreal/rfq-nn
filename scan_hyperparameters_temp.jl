@@ -135,7 +135,7 @@ function getrawdata(target_directory::String)
     catch e
         println("You've entered an invalid target data directory.")
     end
-        
+
     return x_raw_df, y_raw_df
 end
 
@@ -348,14 +348,25 @@ function main()
 
     println("Formatting data...")
     x_raw_df, y_df = getrawdata(target_directory)
-    
+
+    # cutting
+    println("Cutting Transmission to 50-100 percent...")
+    lower::Float32 = 50
+    upper::Float32 = 120
+    x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper)
+
     # decorrelating
+    println("Decorrelating...")
     x_df = decorrelatedvars(x_raw_df)
+
+    # removing DVAR14
+    println("Removing DVAR14")
+    select!(x_df, Not(:DVAR14))
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
-    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=true)
+    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=false)
 
     x_train = Float32.(Matrix(x_train_df))
     x_test = Float32.(Matrix(x_test_df))
