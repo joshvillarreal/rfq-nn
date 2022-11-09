@@ -372,8 +372,8 @@ function main()
     x_df = decorrelatedvars(x_raw_df)
 
     # removing DVAR14
-    println("Removing DVAR14")
-    select!(x_df, Not(:DVAR14))
+    # println("Removing DVAR14")
+    # select!(x_df, Not(:DVAR14))
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
