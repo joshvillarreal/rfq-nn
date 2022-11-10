@@ -167,7 +167,9 @@ end
 
 function buildandtrain(
     x_train,
-    y_train;
+    y_train,
+    x_val,
+    y_val;
     width::Int,
     depth::Int,
     activation_function,
@@ -195,9 +197,11 @@ function buildandtrain(
     training_losses = Float64[]
     epochs = Int64[]
 
+    epochs_between_overfit_check = 10
     if use_gpu
         start_time = time()
         for epoch in 1:n_epochs
+            # TODO -- add k-s test
             l = 0.0
     
             for (xtrain_batch, ytrain_batch) in data_loader
@@ -232,6 +236,10 @@ function buildandtrain(
             push!(training_losses, l)
             if log_training
                 println("    epoch $epoch, loss=$l")
+            end
+
+            if epoch % epochs_between_overfit_check == 0
+                println(residual_kstest_multidim(x_train, x_val, y_train, y_val, m))
             end
         end
         end_time = time()
@@ -278,7 +286,7 @@ function crossvalidate(
 
         # train model
         m, training_losses, dt = buildandtrain(
-            x_train_temp, y_train_temp;
+            x_train_temp, y_train_temp, x_val_temp, y_val_temp;
             width=width, depth=depth, activation_function=activation_function,
             n_epochs=n_epochs, batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate,
             loss_function=loss_function, log_training=log_training, model_id=(model_id * "_$i"), use_gpu=use_gpu

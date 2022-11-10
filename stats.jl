@@ -1,4 +1,5 @@
 using Flux;
+using HypothesisTests;
 using Statistics;
 
 include("helpers.jl")
@@ -48,6 +49,21 @@ function mape(yvec, ŷvec, y_scaler)
     yvec_unscaled = inverse_transform(y_scaler, yvec)
     ŷvec_unscaled = inverse_transform(y_scaler, ŷvec)
     Statistics.mean((broadcast(abs, ŷvec_unscaled-yvec_unscaled) ./ broadcast(abs, yvec_unscaled)))
+end
+
+
+# K-S test for overfitting
+function residual_kstest_multidim(x_train, x_val, y_train, y_val, m)
+    y_train_preds = m(x_train')'; y_val_preds = m(x_val')';
+    kstest_pvalues = Dict{String, Any}()
+    for i in 1:6
+        resids_train = y_train[i, :] .- y_train_preds[i, :]
+        resids_val = y_val[i, :] .- y_val_preds[i, :]
+        kstest_result = ApproximateTwoSampleKSTest(resids_train, resids_val);
+        kstest_pvalues["OBJ$i"] = pvalue(kstest_result)
+    end
+
+    kstest_pvalues
 end
 
 
