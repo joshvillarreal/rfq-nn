@@ -49,6 +49,50 @@ function getdvarprime(data_to_transform, dynamic_lower_bound, strict_upper_bound
     (data_to_transform .- dynamic_lower_bound) ./ (strict_upper_bound .- dynamic_lower_bound)
 end
 
+function applycut(x_raw, y_raw, dvar_label::String, lower::Float32, upper::Float32)
+    if occursin("OBJ", dvar_label)
+        keep_idx = findall(x -> lower <= x <= upper, y_raw[:, dvar_label])
+    else
+        keep_idx = findall(x -> lower <= x <= upper, x_raw[:, dvar_label])
+    end
+
+    x_new = DataFrame(
+        "DVAR1"=>x_raw[keep_idx, "DVAR1"],
+	"DVAR2"=>x_raw[keep_idx, "DVAR2"],
+	"DVAR3"=>x_raw[keep_idx, "DVAR3"], 
+	"DVAR4"=>x_raw[keep_idx, "DVAR4"],
+	"DVAR5"=>x_raw[keep_idx, "DVAR5"],
+	"DVAR6"=>x_raw[keep_idx, "DVAR6"],
+	"DVAR7"=>x_raw[keep_idx, "DVAR7"],
+	"DVAR8"=>x_raw[keep_idx, "DVAR8"],
+	"DVAR9"=>x_raw[keep_idx, "DVAR9"],
+	"DVAR10"=>x_raw[keep_idx, "DVAR10"],
+	"DVAR11"=>x_raw[keep_idx, "DVAR11"],
+	"DVAR12"=>x_raw[keep_idx, "DVAR12"],
+	"DVAR13"=>x_raw[keep_idx, "DVAR13"],
+	"DVAR14"=>x_raw[keep_idx, "DVAR14"]
+	)
+	
+    y_new = DataFrame(
+        "OBJ1"=>y_raw[keep_idx, "OBJ1"],
+        "OBJ2"=>y_raw[keep_idx, "OBJ2"],
+        "OBJ3"=>y_raw[keep_idx, "OBJ3"],
+        "OBJ4"=>y_raw[keep_idx, "OBJ4"],
+        "OBJ5"=>y_raw[keep_idx, "OBJ5"],
+        "OBJ6"=>y_raw[keep_idx, "OBJ6"],
+        )
+
+    println("x_raw shape: $(size(x_raw))")
+    println("x_raw shape: $(size(y_raw))")
+
+    println("x_new shape: $(size(x_new))")
+    println("y_new shape: $(size(y_new))")
+
+    return x_new, y_new
+
+end
+
+
 function decorrelatedvars(df_raw)
     maxes = Dict(
         "DVAR3"=>160.,
