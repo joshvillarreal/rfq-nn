@@ -12,10 +12,11 @@ best_mapes = {
     'OBJ6': 0.115,
 }
 
-res_fns = [r'results/2022-11-09_18-57-50_results.json',  # Transm. 50% cut, Sigm.
+res_fns = [r'results/2022-11-09_18-57-50_results.json',  # Transm. 50% cut, Sigmoid
            r'results/2022-11-10_14-14-31_results.json',  # Transm. 50% cut, ReLU
-           r'results/2022-11-10_22-22-13_results.json',  # Transm. 50% cut, Sigm., no OBJ 6
-           r'results/2022-11-11_13-38-23_results.json']  # Transm. 50% cut, Sigm., no OBJ 5 & 6
+           r'results/2022-11-10_22-22-13_results.json',  # Transm. 50% cut, Sigmoid, no OBJ 6
+           r'results/2022-11-11_13-38-23_results.json',  # Transm. 50% cut, Sigmoid, no OBJ 5 & 6
+           r'results/2022-11-11_15-49-29_results.json']  # Transm. 60% cut, Sigmoid
 
 for res_fn in res_fns:
     with open(res_fn) as f:
