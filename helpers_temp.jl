@@ -212,7 +212,7 @@ function stratifyarchitecturedimension(specified_min, specified_max, n::Int=5; i
 end
 
 function stringnow()
-    Dates.format(now(), "yyyy-mm-dd_HH:MM:SS")
+    Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
 end
 
 function generatemodelid(width::Int64, depth::Int64, activation_function_string::String, batchsize::Int64, learning_rate::Float32, dropout_rate::Float32)
@@ -220,4 +220,3 @@ function generatemodelid(width::Int64, depth::Int64, activation_function_string:
     dropout_rate = round(dropout_rate; digits=7)
     stringnow() * "_w=$width" * "_d=$depth" * "_activation=$activation_function_string" * "_bs=$batchsize" * "_lr=$learning_rate" * "_dr=$dropout_rate"
 end
-
