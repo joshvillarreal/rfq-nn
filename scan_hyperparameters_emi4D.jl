@@ -275,7 +275,7 @@ function crossvalidate(
     use_gpu::Bool=false
 )
     scores_total = initscoresdict(n_folds; by_response=false)
-    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:6)
+    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:5)
 
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
 
@@ -307,7 +307,7 @@ function crossvalidate(
         )
 
         # update scores by objective
-        for j in 1:6
+        for j in 1:5
             y_scaler = y_scalers["OBJ$j"]
             updatescoresdict!(
                 scores_by_response["OBJ$j"], i, y_train_temp[:, j], y_train_temp_preds[:, j],
@@ -374,6 +374,15 @@ function main()
     # removing DVAR14
     # println("Removing DVAR14")
     # select!(x_df, Not(:DVAR14))
+
+    # RMS(OBJ5, OBJ6) -> OBJ5
+    y_df = DataFrame(
+        "OBJ1"=>y_df[:, "OBJ1"],
+        "OBJ2"=>y_df[:, "OBJ2"],
+        "OBJ3"=>y_df[:, "OBJ3"],
+        "OBJ4"=>y_df[:, "OBJ4"],
+        "OBJ5"=>sqrt.((y_df[:, "OBJ5"].^2 + y_df[:, "OBJ6"].^2)./2.0)
+        )
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
