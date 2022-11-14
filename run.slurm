@@ -15,5 +15,5 @@ echo ""
 which julia
 echo ""
 echo "Running Julia Code"
-srun --unbuffered julia -t 1 scan_hyperparameters_temp.jl --data-directory=data/full_opt_15KeV --n-folds=5 --depth-range=5 5 --width-range=100 100 --depth-steps=2 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-training-loss=true --log-folds=true --gpu
+srun --unbuffered julia -t 1 scan_hyperparameters_emi4D.jl --data-directory=data/full_opt_15KeV --n-folds=5 --depth-range=5 5 --width-range=100 100 --depth-steps=2 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-training-loss=true --log-folds=true --gpu
 echo ""
