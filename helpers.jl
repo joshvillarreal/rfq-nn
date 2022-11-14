@@ -124,7 +124,7 @@ end
 
 
 # train test split
-function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
+function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes/")
     if !read_in
         println("- Generating new train and test sets")
         data_size = nrow(x_df)
@@ -134,8 +134,8 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
         println("- Using preexisting train and test sets")
-        train_index_df = CSV.File("indexes/train_indexes.csv"; header=0) |> DataFrame
-        test_index_df = CSV.File("indexes/test_indexes.csv"; header=0) |> DataFrame
+        train_index_df = CSV.File("$path/train_indexes.csv"; header=0) |> DataFrame
+        test_index_df = CSV.File("$path/test_indexes.csv"; header=0) |> DataFrame
 
         train_indexes = train_index_df[:, "Column1"]
         test_indexes = test_index_df[:, "Column1"]

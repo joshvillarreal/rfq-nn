@@ -9,6 +9,7 @@ Pkg.add(
         "DataFrames",
         "Distributions",
         "Flux",
+        "GLM",
 				"HypothesisTests",
         "JSON",
         "LinearAlgebra",
