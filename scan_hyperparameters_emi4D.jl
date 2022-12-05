@@ -375,6 +375,16 @@ function main()
     # println("Removing DVAR14")
     # select!(x_df, Not(:DVAR14))
 
+    # Replace OBJ5 and 6 with sum and diff
+    y_df = DataFrame(
+        "OBJ1"=>y_df[:, "OBJ1"],
+        "OBJ2"=>y_df[:, "OBJ2"],
+        "OBJ3"=>y_df[:, "OBJ3"],
+        "OBJ4"=>y_df[:, "OBJ4"],
+        "OBJ5"=>(y_df[:, "OBJ5"] .+ y_df[:, "OBJ6"]),
+	"OBJ6"=>(y_df[:, "OBJ5"] .- y_df[:, "OBJ6"])
+        )
+
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
