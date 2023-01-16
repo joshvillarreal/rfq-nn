@@ -5,9 +5,8 @@ using Flux;
 using JSON;
 
 
-function simple_check(xs)
-           any(x -> isnan(x) || !isfinite(x) ,xs)
-end
+
+                push!(y_df, responses)
 
 
 function parseactivationfunctions(activation_function_strings)

@@ -7,6 +7,7 @@ import JSON
 using LinearAlgebra
 using MLUtils
 using StatsBase
+using Plots
 
 include("helpers_temp.jl")
 include("stats_temp.jl")
@@ -363,7 +364,7 @@ function main()
 
     # cutting
     println("Cutting Transmission to 60-100 percent...")
-    lower::Float32 = 50
+    lower::Float32 = 60
     upper::Float32 = 120
     x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper)
 
@@ -375,18 +376,29 @@ function main()
     # println("Removing DVAR14")
     # select!(x_df, Not(:DVAR14))
 
-    # Replace OBJ5 and 6 with sum and diff
+    # Replace OBJ5 and 6 with average and abs(diff)
     y_df = DataFrame(
         "OBJ1"=>y_df[:, "OBJ1"],
         "OBJ2"=>y_df[:, "OBJ2"],
         "OBJ3"=>y_df[:, "OBJ3"],
         "OBJ4"=>y_df[:, "OBJ4"],
-        "OBJ5"=>(y_df[:, "OBJ5"] .+ y_df[:, "OBJ6"]),
-	"OBJ6"=>(y_df[:, "OBJ5"] .- y_df[:, "OBJ6"])
+        "OBJ5"=>((y_df[:, "OBJ5"] .+ y_df[:, "OBJ6"]) ./ 2.0),
+	"OBJ6"=>(abs.(y_df[:, "OBJ5"] .- y_df[:, "OBJ6"]))
         )
+
+    lower = 0.0
+    upper = 0.03
+    x_df, y_df = applycut(x_df, y_df, "OBJ6", lower, upper)
+
+    #histogram(y_df[:, "OBJ6"])
+    #gui()
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
+
+    println()
+    println("Y-Scalers:")
+    println(y_scalers)
 
     x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=false)
 
@@ -394,7 +406,6 @@ function main()
     x_test = Float32.(Matrix(x_test_df))
     y_train = Float32.(Matrix(y_train_df))
     y_test = Float32.(Matrix(y_test_df))
-
 
     # training parameters
     println("Preparing for training...")
@@ -426,7 +437,7 @@ function main()
             batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
             log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
         )
-        
+
         # recording results
         outdata_dict = Dict(
             "model_id"=>model_id,

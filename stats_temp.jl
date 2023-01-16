@@ -47,7 +47,10 @@ end
 function mape(yvec, ŷvec, y_scaler)
     yvec_unscaled = inverse_transform(y_scaler, yvec)
     ŷvec_unscaled = inverse_transform(y_scaler, ŷvec)
-    Statistics.mean((broadcast(abs, ŷvec_unscaled-yvec_unscaled) ./ broadcast(abs, yvec_unscaled)))
+
+    ε::Float32 = eps(Float32)
+
+    Statistics.mean((broadcast(abs, ŷvec_unscaled-yvec_unscaled) ./ broadcast(max, ε, broadcast(abs, yvec_unscaled))))
 end
 
 

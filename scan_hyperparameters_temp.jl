@@ -367,6 +367,9 @@ function main()
     upper::Float32 = 120
     x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper)
 
+    #println("Cutting cutting emi_x >= emi_y...")
+    #x_raw_df, y_df = applyemicut(x_raw_df, y_df)
+
     # decorrelating
     println("Decorrelating...")
     x_df = decorrelatedvars(x_raw_df)
