@@ -3,6 +3,7 @@ using Pkg
 Pkg.add(
     [
         "ArgParse",
+        "BayesianOptimization",
         "BSON",
         "CSV",
         "CUDA",
@@ -18,6 +19,7 @@ Pkg.add(
         "Plots",
         "StatsBase",
         "StatsPlots",
+        "Surrogates",
         "Tables"
     ]
 )
