@@ -1,12 +1,14 @@
 using ArgParse
 using CUDA
-using BSON: @save
+#using BSON: @save
 using DataFrames
 using Flux
 import JSON
 using LinearAlgebra
 using MLUtils
 using StatsBase
+using Plots
+using JLD2, FileIO
 
 include("helpers_temp.jl")
 include("stats_temp.jl")
@@ -226,7 +228,8 @@ function buildandtrain(
 	m = cpu(m)
 
         # save model
-        @save "models/$model_id.bson" m
+        #@save "models/$model_id.bson" m
+        @save "models/$model_id.jld2" m
 
         return m, training_losses, end_time-start_time
     else
@@ -249,7 +252,8 @@ function buildandtrain(
         end_time = time()
 
         # save model
-        @save "models/$model_id.bson" m
+        #@save "models/$model_id.bson" m
+        @save "models/$model_id.jld2" m
 
         return m, training_losses, end_time-start_time
     end
@@ -274,8 +278,9 @@ function crossvalidate(
     y_scalers=nothing,
     use_gpu::Bool=false
 )
+    
     scores_total = initscoresdict(n_folds; by_response=false)
-    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:6)
+    scores_by_response = Dict("OBJ$i"=>initscoresdict(n_folds; by_response=true) for i in 1:size(y_train)[2])
 
     train_temp_idxs, val_temp_idxs = kfolds(size(x_train)[1]; k=n_folds)
 
@@ -300,6 +305,19 @@ function crossvalidate(
         # gather predictions
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
 
+	# Test loading m back in as m2
+	m2 = JLD2.load_object("models/$(model_id * "_$i").jld2")
+        y_train_temp_preds2 = m2(x_train_temp')'; y_val_temp_preds2 = m2(x_val_temp')'
+	
+        # Q&D Plotting of OBJ6
+        if i == 1
+            p1 = histogram(y_val_temp[:, 6])
+	    p2 = histogram(y_val_temp_preds2[:, 6])
+	    plot(p1, p2, layout=(1,2), legend=false)
+	    gui()
+	    readline()
+	end
+
         # update aggregate scores
         updatescoresdict!(
             scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
@@ -307,7 +325,7 @@ function crossvalidate(
         )
 
         # update scores by objective
-        for j in 1:6
+        for j in 1:size(y_train_temp)[2]
             y_scaler = y_scalers["OBJ$j"]
             updatescoresdict!(
                 scores_by_response["OBJ$j"], i, y_train_temp[:, j], y_train_temp_preds[:, j],
@@ -363,7 +381,7 @@ function main()
 
     # cutting
     println("Cutting Transmission to 60-100 percent...")
-    lower::Float32 = 50
+    lower::Float32 = 60
     upper::Float32 = 120
     x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper)
 
@@ -375,18 +393,30 @@ function main()
     # println("Removing DVAR14")
     # select!(x_df, Not(:DVAR14))
 
-    # Replace OBJ5 and 6 with sum and diff
+    # Replace OBJ5 and 6 with average and abs(diff)
     y_df = DataFrame(
         "OBJ1"=>y_df[:, "OBJ1"],
         "OBJ2"=>y_df[:, "OBJ2"],
         "OBJ3"=>y_df[:, "OBJ3"],
         "OBJ4"=>y_df[:, "OBJ4"],
-        "OBJ5"=>(y_df[:, "OBJ5"] .+ y_df[:, "OBJ6"]),
-	"OBJ6"=>(y_df[:, "OBJ5"] .- y_df[:, "OBJ6"])
+        "OBJ5"=>(sqrt.(y_df[:, "OBJ5"].^2.0 .+ y_df[:, "OBJ6"].^2.0)),
+	"OBJ6"=>(atan.(y_df[:, "OBJ6"], y_df[:, "OBJ5"])) 
         )
+                                                                                                              
+    #lower = 0.0
+    #upper = 0.02
+    #x_df, y_df = applycut(x_df, y_df, "OBJ6", lower, upper)
+
+    #histogram(y_df[:, "OBJ5"])
+    #histogram(y_df[:, "OBJ6"], bins=2000, xlims=(0.0, 0.001))
+    #gui()
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
+
+    println()
+    println("Y-Scalers:")
+    println(y_scalers)
 
     x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=false)
 
@@ -394,7 +424,6 @@ function main()
     x_test = Float32.(Matrix(x_test_df))
     y_train = Float32.(Matrix(y_train_df))
     y_test = Float32.(Matrix(y_test_df))
-
 
     # training parameters
     println("Preparing for training...")
@@ -426,7 +455,10 @@ function main()
             batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
             log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
         )
-        
+
+        println(cv_scores["by_response"]["OBJ5"]["mape_val"])
+        println(cv_scores["by_response"]["OBJ6"]["mape_val"])
+
         # recording results
         outdata_dict = Dict(
             "model_id"=>model_id,
