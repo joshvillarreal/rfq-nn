@@ -1,5 +1,5 @@
 using ArgParse
-using CUDA
+# using CUDA
 #using BSON: @save
 using DataFrames
 using Flux
@@ -188,9 +188,9 @@ function buildandtrain(
     # init model
     if use_gpu
         # Select GPU
-	gpus = [gpu_id for gpu_id in devices()]
-	device!(gpus[Threads.threadid()])
-	# Create NN and offload to GPU
+        gpus = [gpu_id for gpu_id in devices()]
+        device!(gpus[Threads.threadid()])
+        # Create NN and offload to GPU
         m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function) |> gpu
     else
         m = neuralnetworkwithdropout(size(x_train)[2], size(y_train)[2], width, depth, dropout_rate, activation_function)
@@ -340,9 +340,9 @@ end
 
 function main()
     # Do sanity check that we have exaclty N Threads == N CUDA devices
-    if length(devices()) != Threads.nthreads()
-        println("N Threads must be equal N GPUs! Aborting...")
-	exit()
+    # if length(devices()) != Threads.nthreads()
+    #     println("N Threads must be equal N GPUs! Aborting...")
+	# exit()
     end
 
     # Temp
@@ -393,15 +393,19 @@ function main()
     # println("Removing DVAR14")
     # select!(x_df, Not(:DVAR14))
 
-    # Replace OBJ5 and 6 with average and abs(diff)
+    # modify obj5 and obj6
+    emits = hcat(y_df[:, "OBJ5"], y_df[:, "OBJ6"]);
+
     y_df = DataFrame(
         "OBJ1"=>y_df[:, "OBJ1"],
         "OBJ2"=>y_df[:, "OBJ2"],
         "OBJ3"=>y_df[:, "OBJ3"],
         "OBJ4"=>y_df[:, "OBJ4"],
-        "OBJ5"=>(sqrt.(y_df[:, "OBJ5"].^2.0 .+ y_df[:, "OBJ6"].^2.0)),
-	"OBJ6"=>(atan.(y_df[:, "OBJ6"], y_df[:, "OBJ5"])) 
-        )
+        # "OBJ5"=>(sqrt.(y_df[:, "OBJ5"].^2.0 .+ y_df[:, "OBJ6"].^2.0)),
+	    # "OBJ6"=>(atan.(y_df[:, "OBJ6"], y_df[:, "OBJ5"])) 
+        "OBJ5"=>[maximum(emit) for emit in eachrow(emits)],
+        "OBJ6"=>[minimum(emit) for emit in eachrow(emits)],
+    )
                                                                                                               
     #lower = 0.0
     #upper = 0.02

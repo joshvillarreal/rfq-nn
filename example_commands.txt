@@ -25,3 +25,6 @@ julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-f
 
 -- Script 3: depth 6; widths 50, 75, 100; 2500 epochs, 5 CV folds --
 julia -t auto scan_hyperparameters.jl --data-directory=data/full_opt_15KeV --n-folds=5 --depth-range=6 6 --depth-steps=2 --width-range=50 100 --width-steps=3 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-folds=true
+
+-- Run emit_scan_4d --
+julia -t auto scan_hyperparameters_emi4D.jl --data-directory=data/full_opt_15KeV --n-folds=5 --depth-range=5 5 --depth-steps=2 --width-range=100 100 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-folds=true
