@@ -417,32 +417,8 @@ function main()
     println("Decorrelating...")
     x_df = decorrelatedvars(x_raw_df; with_numcells=true)
 
-    # removing DVAR14
-    # println("Removing DVAR14")
-    # select!(x_df, Not(:DVAR14))
-
     # modify obj5 and obj6
     emits = hcat(y_df[:, "OBJ5"], y_df[:, "OBJ6"]);
-
-    #= Where we modify y_df for emittances
-    y_df = DataFrame(
-        "OBJ1"=>y_df[:, "OBJ1"],
-        "OBJ2"=>y_df[:, "OBJ2"],
-        "OBJ3"=>y_df[:, "OBJ3"],
-        "OBJ4"=>y_df[:, "OBJ4"],
-        # "OBJ5"=>(sqrt.(y_df[:, "OBJ5"].^2.0 .+ y_df[:, "OBJ6"].^2.0)),
-	    # "OBJ6"=>(atan.(y_df[:, "OBJ6"], y_df[:, "OBJ5"])) 
-        "OBJ5"=>[maximum(emit) for emit in eachrow(emits)],
-        "OBJ6"=>[minimum(emit) for emit in eachrow(emits)],
-    ) =#
-                                                                                                              
-    #lower = 0.0
-    #upper = 0.02
-    #x_df, y_df = applycut(x_df, y_df, "OBJ6", lower, upper)
-
-    #histogram(y_df[:, "OBJ5"])
-    #histogram(y_df[:, "OBJ6"], bins=2000, xlims=(0.0, 0.001))
-    #gui()
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
