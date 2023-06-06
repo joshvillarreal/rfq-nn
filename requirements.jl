@@ -19,6 +19,7 @@ Pkg.add(
         "MLUtils",
         "Parameters",
         "Plots",
+        "PyCall",
         "StatsBase",
         "StatsPlots",
         "Surrogates",
