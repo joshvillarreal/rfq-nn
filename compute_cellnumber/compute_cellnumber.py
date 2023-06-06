@@ -1,6 +1,5 @@
 import copy
 import numpy as np
-import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.special import iv as bessel1
 import scipy.constants as consts
