@@ -5,6 +5,7 @@ Pkg.add(
         "ArgParse",
         "BayesianOptimization",
         "BSON",
+        "Conda",
         "CSV",
         "CUDA",
         "DataFrames",
