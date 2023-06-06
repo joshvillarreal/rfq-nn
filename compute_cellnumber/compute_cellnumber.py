@@ -41,15 +41,19 @@ RMSBmin = 0.01
 def compute_cellnumber(row):
     """
     row: Dict-like
-    returns either number of cells or -1 for an RFQ that has too low of transmission or
-    """
-    ion.calculate_from_energy_mev(Win * 1e-3 / ion.a())
 
+    note that in computing cellnumbers, it's best to only do this for transmissions of at least 50%
+    and lengths of no more than 180 cm. we will have to enforce this elsewhere, given the intended
+    structure of this function
+
+    originally:
     if row["Length"] >= Xmax:
         return -1
 
     if row["Transmission"] < 50:
         return -1
+    """
+    ion.calculate_from_energy_mev(Win * 1e-3 / ion.a())
 
     Bmax = row["Bmax"]
     mX1 = row["mX1"]
