@@ -215,7 +215,12 @@ function minmaxscaledf(df)
         scaled_data_dict[colname] = transform(scaler, data)
         scalers[colname] = scaler
     end
-    return DataFrame(scaled_data_dict), scalers
+    df_out = DataFrame(scaled_data_dict)
+    
+    # need to reorder columns -- building the dataframe from the dictionary alphebatized the columns,
+    # which is not what we want.
+    df_out = df_out[!, names(df)]
+    return df_out, scalers
 end
 
 

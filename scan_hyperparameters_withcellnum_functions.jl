@@ -404,6 +404,9 @@ function main()
     println("Formatting data...")
     x_raw_df, y_df, cellnumber_df = getrawdata_withcellnum(target_directory)
 
+    # we are interested in whether cellnumber is odd or even
+    cellnumber_df = cellnumber_df .% 2
+
     # how to process cellnumber, for now let's make it another dvar
     x_raw_df = hcat(x_raw_df, cellnumber_df)
 
@@ -422,6 +425,11 @@ function main()
 
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
+
+    # need to make sure that column names didn't switch
+    println("names of x_raw_df", names(x_raw_df))
+    println("names of x_scaled_df", names(x_scaled_df))
+    @assert names(x_raw_df) == names(x_scaled_df)
 
     println()
     println("Y-Scalers:")
