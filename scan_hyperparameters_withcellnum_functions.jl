@@ -444,6 +444,7 @@ function main()
 
     # training parameters
     println("Preparing for training...")
+    println("- ", x_train[1, :])
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps; ints_only=true)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps; ints_only=true)
     batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps; ints_only=true)]
