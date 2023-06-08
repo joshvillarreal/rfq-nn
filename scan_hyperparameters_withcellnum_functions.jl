@@ -112,8 +112,8 @@ function readjsonsfromdirectory_withcellnum(target_directory::String, x_df, y_df
             for sample in data_raw
                 features = sample[2]["dvar"]
                 responses = sample[2]["obj"]
-                # cellnumber = Dict("cellnumber" => sample[2]["numcells"]) # numcells
-                cellnumber = Dict("cellnumber" => sample[2]["numcells"]) # odd-even
+
+                cellnumber = Dict("cellnumber" => sample[2]["numcells"])
 
                 push!(x_df, features)
                 push!(y_df, responses)
