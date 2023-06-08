@@ -427,8 +427,8 @@ function main()
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
     # need to make sure that column names didn't switch
-    println("names of x_raw_df", names(x_raw_df))
-    println("names of x_scaled_df", names(x_scaled_df))
+    println("- names of x_raw_df", names(x_raw_df))
+    println("- names of x_scaled_df", names(x_scaled_df))
     @assert names(x_raw_df) == names(x_scaled_df)
 
     println()
