@@ -243,14 +243,14 @@ function buildandtrain(
             push!(epochs, epoch)
             push!(training_losses, l)
 	    
-	    if log_training && mod(epoch, 25) == 0.0
-	        epoch_time = time() - start_time
-	        println("    epoch $epoch, loss=$l, time=$epoch_time")
-	    end
+            if log_training && mod(epoch, 25) == 0.0
+                epoch_time = time() - start_time
+                println("    epoch $epoch, loss=$l, time=$epoch_time")
+            end
       	end
         end_time = time()
 
-	m = cpu(m)
+	    m = cpu(m)
 
         # save model
         #@save "models/$model_id.bson" m
@@ -279,6 +279,7 @@ function buildandtrain(
 
         # save model
         # @save "models/$model_id.jld2" m
+        println("upgraded model saving")
         model_state = Flux.state(m);
         jldsave("models/$model_id.jld2"; model_state)
 
