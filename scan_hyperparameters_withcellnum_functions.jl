@@ -254,7 +254,8 @@ function buildandtrain(
 
         # save model
         #@save "models/$model_id.bson" m
-        @save "models/$model_id.jld2" m
+        model_state = Flux.state(m);
+        jldsave("models/$model_id.jld2"; model_state)
 
         return m, training_losses, end_time-start_time
     else
@@ -277,8 +278,9 @@ function buildandtrain(
         end_time = time()
 
         # save model
-        #@save "models/$model_id.bson" m
-        @save "models/$model_id.jld2" m
+        # @save "models/$model_id.jld2" m
+        model_state = Flux.state(m);
+        jldsave("models/$model_id.jld2"; model_state)
 
         return m, training_losses, end_time-start_time
     end
