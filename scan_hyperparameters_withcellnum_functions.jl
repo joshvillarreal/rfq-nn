@@ -281,7 +281,7 @@ function buildandtrain(
         # @save "models/$model_id.jld2" m
         println("upgraded model saving")
         model_state = Flux.state(m);
-        jldsave("models/$model_id.jld2"; model_state)
+        jldsave("models/$model_id.jld2"; model_state=model_state)
 
         return m, training_losses, end_time-start_time
     end
