@@ -1,0 +1,101 @@
+ERROR: LoadError: TaskFailedException
+Stacktrace:
+ [1] wait
+   @ ./task.jl:345 [inlined]
+ [2] threading_run(fun::var"#41#threadsfor_fun#82"{var"#41#threadsfor_fun#73#83"{Vector{Dict}, typeof(Flux.Losses.mse), Matrix{Float64}, Matrix{Float64}, Dict{String, MinMaxScaler}, Bool, Int64, Bool, Bool, Bool, String, Int64, Array{Tuple{Int64, Tuple{Any, Int64, Any, Int64, Float64, Float64}}, 6}}}, static::Bool)
+   @ Base.Threads ./threadingconstructs.jl:38
+ [3] macro expansion
+   @ ./threadingconstructs.jl:89 [inlined]
+ [4] main()
+   @ Main ~/rfq-nn/scan_hyperparameters.jl:379
+ [5] top-level scope
+   @ ~/rfq-nn/scan_hyperparameters.jl:423
+
+    nested task error: Out of GPU memory trying to allocate 600.000 KiB
+    Effective GPU memory usage: 99.97% (23.496 GiB/23.504 GiB)
+    Memory pool usage: 22.490 GiB (22.875 GiB reserved)
+    Stacktrace:
+      [1] macro expansion
+        @ ~/.julia/packages/CUDA/DfvRa/src/pool.jl:320 [inlined]
+      [2] macro expansion
+        @ ./timing.jl:382 [inlined]
+      [3] #_alloc#170
+        @ ~/.julia/packages/CUDA/DfvRa/src/pool.jl:313 [inlined]
+      [4] #alloc#169
+        @ ~/.julia/packages/CUDA/DfvRa/src/pool.jl:299 [inlined]
+      [5] alloc
+        @ ~/.julia/packages/CUDA/DfvRa/src/pool.jl:293 [inlined]
+      [6] CuArray{ForwardDiff.Dual{Nothing, Float32, 1}, 2, CUDA.Mem.DeviceBuffer}(#unused#::UndefInitializer, dims::Tuple{Int64, Int64})
+        @ CUDA ~/.julia/packages/CUDA/DfvRa/src/array.jl:42
+      [7] CuArray
+        @ ~/.julia/packages/CUDA/DfvRa/src/array.jl:125 [inlined]
+      [8] CuArray
+        @ ~/.julia/packages/CUDA/DfvRa/src/array.jl:136 [inlined]
+      [9] similar
+        @ ./abstractarray.jl:841 [inlined]
+     [10] similar
+        @ ./abstractarray.jl:840 [inlined]
+     [11] similar
+        @ ~/.julia/packages/CUDA/DfvRa/src/broadcast.jl:11 [inlined]
+     [12] copy
+        @ ~/.julia/packages/GPUArrays/fqD8z/src/host/broadcast.jl:37 [inlined]
+     [13] materialize(bc::Base.Broadcast.Broadcasted{CUDA.CuArrayStyle{2}, Nothing, Zygote.var"#944#947"{var"#55#58"{var"#19#23"}}, Tuple{CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}}})
+        @ Base.Broadcast ./broadcast.jl:860
+     [14] broadcast_forward(f::Function, args::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/lib/broadcast.jl:250
+     [15] adjoint
+        @ ~/.julia/packages/Zygote/SmJK6/src/lib/broadcast.jl:267 [inlined]
+     [16] _pullback(__context__::Zygote.Context{true}, 743::typeof(Base.Broadcast.broadcasted), 744::CUDA.CuArrayStyle{2}, f::Function, args::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer})
+        @ Zygote ~/.julia/packages/ZygoteRules/AIbCs/src/adjoint.jl:65
+     [17] _apply(::Function, ::Vararg{Any})
+        @ Core ./boot.jl:816
+     [18] adjoint
+        @ ~/.julia/packages/Zygote/SmJK6/src/lib/lib.jl:203 [inlined]
+     [19] _pullback
+        @ ~/.julia/packages/ZygoteRules/AIbCs/src/adjoint.jl:65 [inlined]
+     [20] _pullback
+        @ ./broadcast.jl:1298 [inlined]
+     [21] _pullback
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:172 [inlined]
+     [22] macro expansion
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:53 [inlined]
+     [23] _pullback
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:53 [inlined]
+     [24] _pullback
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:51 [inlined]
+     [25] macro expansion
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:53 [inlined]
+     [26] _pullback
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:53 [inlined]
+     [27] _pullback(::Zygote.Context{true}, ::typeof(Flux._applychain), ::Tuple{Dense{var"#53#56"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Dense{typeof(identity), CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}}, ::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface2.jl:0
+     [28] _pullback
+        @ ~/.julia/packages/Flux/ZdbJr/src/layers/basic.jl:51 [inlined]
+     [29] _pullback(ctx::Zygote.Context{true}, f::Chain{Tuple{Dense{var"#53#56"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Chain{Tuple{Dense{var"#55#58"{var"#19#23"}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}, Dropout{Float64, Colon, CUDA.RNG}}}, Dense{typeof(identity), CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}}}}, args::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface2.jl:0
+     [30] _pullback
+        @ ~/rfq-nn/scan_hyperparameters.jl:196 [inlined]
+     [31] _pullback(::Zygote.Context{true}, ::var"#loss#61"{typeof(Flux.Losses.mse)}, ::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, ::CuArray{Float32, 2, CUDA.Mem.DeviceBuffer})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface2.jl:0
+     [32] _pullback
+        @ ~/rfq-nn/scan_hyperparameters.jl:210 [inlined]
+     [33] _pullback(::Zygote.Context{true}, ::var"#60#62"{var"#loss#61"{typeof(Flux.Losses.mse)}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}, CuArray{Float32, 2, CUDA.Mem.DeviceBuffer}})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface2.jl:0
+     [34] pullback(f::Function, ps::Zygote.Params{Zygote.Buffer{Any, Vector{Any}}})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface.jl:384
+     [35] gradient(f::Function, args::Zygote.Params{Zygote.Buffer{Any, Vector{Any}}})
+        @ Zygote ~/.julia/packages/Zygote/SmJK6/src/compiler/interface.jl:96
+     [36] buildandtrain(x_train::Matrix{Float64}, y_train::Matrix{Float64}, x_val::Matrix{Float64}, y_val::Matrix{Float64}; width::Int64, depth::Int64, activation_function::Function, n_epochs::Int64, batchsize::Int64, optimizer::Adam, dropout_rate::Float64, loss_function::typeof(Flux.Losses.mse), log_training::Bool, model_id::String, use_gpu::Bool)
+        @ Main ~/rfq-nn/scan_hyperparameters.jl:209
+     [37] crossvalidate(x_train::Matrix{Float64}, y_train::Matrix{Float64}; n_folds::Int64, width::Int64, depth::Int64, activation_function::Function, n_epochs::Int64, batchsize::Int64, optimizer::Adam, dropout_rate::Float64, loss_function::typeof(Flux.Losses.mse), log_training::Bool, log_folds::Bool, model_id::String, y_scalers::Dict{String, MinMaxScaler}, use_gpu::Bool)
+        @ Main ~/rfq-nn/scan_hyperparameters.jl:288
+     [38] macro expansion
+        @ ~/rfq-nn/scan_hyperparameters.jl:388 [inlined]
+     [39] (::var"#41#threadsfor_fun#82"{var"#41#threadsfor_fun#73#83"{Vector{Dict}, typeof(Flux.Losses.mse), Matrix{Float64}, Matrix{Float64}, Dict{String, MinMaxScaler}, Bool, Int64, Bool, Bool, Bool, String, Int64, Array{Tuple{Int64, Tuple{Any, Int64, Any, Int64, Float64, Float64}}, 6}}})(tid::Int64; onethread::Bool)
+        @ Main ./threadingconstructs.jl:84
+     [40] #41#threadsfor_fun
+        @ ./threadingconstructs.jl:51 [inlined]
+     [41] (::Base.Threads.var"#1#2"{var"#41#threadsfor_fun#82"{var"#41#threadsfor_fun#73#83"{Vector{Dict}, typeof(Flux.Losses.mse), Matrix{Float64}, Matrix{Float64}, Dict{String, MinMaxScaler}, Bool, Int64, Bool, Bool, Bool, String, Int64, Array{Tuple{Int64, Tuple{Any, Int64, Any, Int64, Float64, Float64}}, 6}}}, Int64})()
+        @ Base.Threads ./threadingconstructs.jl:30
+in expression starting at /home/submit/villaj/rfq-nn/scan_hyperparameters.jl:423
+srun: error: submit20: task 0: Exited with exit code 1

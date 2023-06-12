@@ -3,8 +3,6 @@ using Pkg
 Pkg.add(
     [
         "ArgParse",
-        "BayesianOptimization",
-        "BSON",
         "Conda",
         "CSV",
         "CUDA",
@@ -13,7 +11,7 @@ Pkg.add(
         "FileIO",
         "Flux",
         "GLM",
-				"HypothesisTests",
+	"HypothesisTests",
         "JLD2",
         "JSON",
         "LinearAlgebra",
