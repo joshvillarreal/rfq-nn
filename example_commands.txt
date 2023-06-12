@@ -32,5 +32,5 @@ julia -t auto scan_hyperparameters_emi4D.jl --data-directory=data/full_opt_15KeV
 -- Run cellnum scan --
 julia -t auto scan_hyperparameters_withcellnum.jl --data-directory=data/full_with_cellnumber --n-folds=5 --depth-range=5 5 --depth-steps=2 --width-range=100 100 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-folds=true --log-training-loss=true
 
--- Test cellnum as obj scan --
-julia -t auto scan_hyperparameters_cellnumobj.jl --data-directory=data/full_with_cellnumber --n-folds=2 --depth-range=5 5 --depth-steps=2 --width-range=100 100 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=2500 --log-training-starts=true --log-folds=true --log-training-loss=true
+-- Test GPU w/ cellnum
+julia -t auto scan_hyperparameters_withcellnum.jl --data-directory=data/full_with_cellnumber --n-folds=2 --depth-range=5 5 --depth-steps=2 --width-range=100 100 --width-steps=2 --activation-functions=sigmoid --batch-size-range=1024 1024 --batch-size-steps=2 --learning-rate-range=0.001 0.001 --learning-rate-steps=2 --dropout-rate-range=0.0 0.0 --dropout-rate-steps=2 --n-epochs=25 --log-training-starts=true --log-folds=true --log-training-loss=true --gpu
