@@ -1,5 +1,5 @@
 using ArgParse
-# using CUDA
+using CUDA
 #using BSON: @save
 using DataFrames
 using Flux
@@ -253,9 +253,8 @@ function buildandtrain(
 	    m = cpu(m)
 
         # save model
-        #@save "models/$model_id.bson" m
         model_state = Flux.state(m);
-        jldsave("models/$model_id.jld2"; model_state)
+        jldsave("models/$model_id.jld2"; model_state=model_state)
 
         return m, training_losses, end_time-start_time
     else
@@ -278,8 +277,6 @@ function buildandtrain(
         end_time = time()
 
         # save model
-        # @save "models/$model_id.jld2" m
-        println("upgraded model saving")
         model_state = Flux.state(m);
         jldsave("models/$model_id.jld2"; model_state=model_state)
 
@@ -333,19 +330,6 @@ function crossvalidate(
         # gather predictions
         y_train_temp_preds = m(x_train_temp')'; y_val_temp_preds = m(x_val_temp')'
 
-	# Test loading m back in as m2
-	# m2 = JLD2.load_object("models/$(model_id * "_$i").jld2")
-        # y_train_temp_preds2 = m2(x_train_temp')'; y_val_temp_preds2 = m2(x_val_temp')'
-	
-        # Q&D Plotting of OBJ6
-        # if i == 1
-        #    p1 = histogram(y_val_temp[:, 6])
-	#    p2 = histogram(y_val_temp_preds2[:, 6])
-	#    plot(p1, p2, layout=(1,2), legend=false)
-	#    gui()
-	#    readline()
-	#end
-
         # update aggregate scores
         updatescoresdict!(
             scores_total, i, y_train_temp, y_train_temp_preds, y_val_temp, y_val_temp_preds,
@@ -368,10 +352,10 @@ end
 
 function main()
     # Do sanity check that we have exaclty N Threads == N CUDA devices
-    # if length(devices()) != Threads.nthreads()
-    #     println("N Threads must be equal N GPUs! Aborting...")
-	# exit()
-    # end
+    if length(devices()) != Threads.nthreads()
+        println("N Threads must be equal N GPUs! Aborting...")
+	exit()
+    end
 
     # Temp
     println("Passed N Threads == N GPU sanity check!")
@@ -430,8 +414,6 @@ function main()
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
     # need to make sure that column names didn't switch
-    println("- names of x_raw_df", names(x_raw_df))
-    println("- names of x_scaled_df", names(x_scaled_df))
     @assert names(x_raw_df) == names(x_scaled_df)
 
     println()
@@ -447,7 +429,6 @@ function main()
 
     # training parameters
     println("Preparing for training...")
-    println("- ", x_train[1, :])
     depths = stratifyarchitecturedimension(depth_range[1], depth_range[2], depth_steps; ints_only=true)
     widths = stratifyarchitecturedimension(width_range[1], width_range[2], width_steps; ints_only=true)
     batchsizes = [2^logbs for logbs in stratifyarchitecturedimension(Int(log2(batch_size_range[1])), Int(log2(batch_size_range[2])), batch_size_steps; ints_only=true)]
