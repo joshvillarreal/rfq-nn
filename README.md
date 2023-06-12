@@ -14,6 +14,8 @@ Or alternatively, from the command line:
 In case Julia comes preinstalled on your local machine, a tool that I found helpful for managing Julia versions is <a href="https://github.com/johnnychen94/jill.py">`jill.py`</a>.
 
 ## Package requirements
-Scripts can be installed by leveraging the Julia `Pkg` module, which is prewritten in `requirements.jl`. Once you've installed Julia, run the following from the root of the directory:
+The `Project.toml` and `Manifest.toml` contain all necessary dependencies, and effectively create an environment that can be used to run all scripts in this project. See <a href="https://pkgdocs.julialang.org/v1/toml-files/">here</a>.
 
-```$ julia requirements.jl```
+To set up this environment, run the following command from the base directory:
+
+```$ julia --project=. -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'```
