@@ -158,7 +158,8 @@ function getrawdata_withcellnum(target_directory::String)
     try
         x_raw_df, y_raw_df, cellnumber_raw_df = readjsonsfromdirectory_withcellnum(target_directory, x_raw_df, y_raw_df, cellnumber_raw_df)
     catch e
-        println("Something went wrong.")
+        println("Something went wrong with loading your data. Aborting...")
+        exit()
     end
 
     return x_raw_df, y_raw_df, cellnumber_raw_df
@@ -351,13 +352,12 @@ end
 
 
 function main()
-    # Do sanity check that we have exaclty N Threads == N CUDA devices
+    # Sanity check that we have exaclty N Threads == N CUDA devices
     if length(devices()) != Threads.nthreads()
         println("N Threads must be equal N GPUs! Aborting...")
-	exit()
+	    exit()
     end
 
-    # Temp
     println("Passed N Threads == N GPU sanity check!")
 
     # gather arguments
@@ -413,14 +413,12 @@ function main()
     x_scaled_df, _ = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
-    # need to make sure that column names didn't switch
+    # need to make sure that column names didn't switch orders
     @assert names(x_raw_df) == names(x_scaled_df)
+    @assert names(y_df) == names(y_scaled_df)
 
-    println()
-    println("Y-Scalers:")
-    println(y_scalers)
-
-    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=false)
+    # hardcoding that we are using the same train / test indexes for everything
+    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=true)
 
     x_train = Float32.(Matrix(x_train_df))
     x_test = Float32.(Matrix(x_test_df))
@@ -457,9 +455,6 @@ function main()
             batchsize=batchsize, optimizer=optimizer, dropout_rate=dropout_rate, loss_function=loss_function, log_training=log_training_loss,
             log_folds=log_folds, model_id=model_id, y_scalers=y_scalers, use_gpu=use_gpu
         )
-
-        println(cv_scores["by_response"]["OBJ5"]["mape_val"])
-        println(cv_scores["by_response"]["OBJ6"]["mape_val"])
 
         # recording results
         outdata_dict = Dict(
