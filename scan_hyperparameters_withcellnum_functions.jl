@@ -413,8 +413,10 @@ function main()
     # modify obj5 and obj6
     emits = hcat(y_df[:, "OBJ5"], y_df[:, "OBJ6"]);
 
-    x_scaled_df, _ = minmaxscaledf(x_df)
+    x_scaled_df, x_scalers = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
+
+    println(x_scalers)
 
     # need to make sure that column names didn't switch orders
     @assert names(x_raw_df) == names(x_scaled_df)
