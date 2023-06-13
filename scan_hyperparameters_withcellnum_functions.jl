@@ -350,14 +350,6 @@ end
 
 
 function main()
-    # Sanity check that we have exaclty N Threads == N CUDA devices
-    if length(devices()) != Threads.nthreads()
-        println("N Threads must be equal N GPUs! Aborting...")
-	    exit()
-    end
-
-    println("Passed N Threads == N GPU sanity check!")
-
     # gather arguments
     println("Gathering arguments...")
     parsed_args = parse_commandline()
@@ -381,6 +373,19 @@ function main()
     n_folds = parsed_args["n-folds"]
     outfile = parsed_args["outfile"]
     use_gpu = parsed_args["gpu"]
+
+    # making sure we're CUDA functional
+    if CUDA.functional()
+        # Sanity check that we have exaclty N Threads == N CUDA devices
+        if length(devices()) != Threads.nthreads()
+            println("N Threads must be equal N GPUs! Aborting...")
+            exit()
+        end
+        println("Passed N Threads == N GPU sanity check!")
+    else
+        println("You're not CUDA functional. Defaulting to CPU.")
+        use_gpu=false
+    end
 
     if ~endswith(outfile, ".json")
         throw("Outfile must be a .json file")
