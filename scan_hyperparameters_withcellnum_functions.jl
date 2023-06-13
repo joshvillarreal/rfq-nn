@@ -229,12 +229,11 @@ function buildandtrain(
     if use_gpu
         start_time = time()
         for epoch in 1:n_epochs
+            l=0.0
 
-	    l=0.0
-    
             for (xs, ys) in CuIterator(data_loader)
                 gs = gradient(Flux.params(m)) do
-		    y_pred = m(xs)
+                    y_pred = m(xs)
                     l += sum(loss_function(y_pred, ys))
                 end
                 Flux.Optimise.update!(optimizer, Flux.params(m), gs)
@@ -242,15 +241,15 @@ function buildandtrain(
 
             push!(epochs, epoch)
             push!(training_losses, l)
-	    
+
             if log_training && mod(epoch, 25) == 0.0
                 epoch_time = time() - start_time
                 println("    epoch $epoch, loss=$l, time=$epoch_time")
             end
-      	end
+        end
         end_time = time()
 
-	    m = cpu(m)
+        m = cpu(m)
 
         # save model
         model_state = Flux.state(m);
