@@ -93,6 +93,9 @@ function parse_commandline()
             help = "Print status of each fold"
             arg_type = Bool
             default = false
+        "--cut-transmission"
+            help = "Restrict transmission values to >= 60%"
+            action = :store_true
         "--gpu"
             help = "Flag to use GPU for training"
             action = :store_true
@@ -373,6 +376,7 @@ function main()
     n_folds = parsed_args["n-folds"]
     outfile = parsed_args["outfile"]
     use_gpu = parsed_args["gpu"]
+    cut_transmission = parsed_args["cut-transmission"]
 
     # making sure we're CUDA functional
     if CUDA.functional()
@@ -400,19 +404,19 @@ function main()
     # how to process cellnumber, for now let's make it another dvar
     x_raw_df = hcat(x_raw_df, cellnumber_df)
 
-    # cutting
-    println("Cutting Transmission to 60-100 percent...")
-    lower::Float32 = 60
-    upper::Float32 = 120
-    x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper; with_numcells=true)
+    # cutting transmission
+    if cut_transmission
+        println("Cutting Transmission to 60-100 percent...")
+        lower::Float32 = 60
+        upper::Float32 = 120
+        x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper; with_numcells=true)
+    end
 
     # decorrelating
     println("Decorrelating...")
     x_df = decorrelatedvars(x_raw_df; with_numcells=true)
 
-    # modify obj5 and obj6
-    emits = hcat(y_df[:, "OBJ5"], y_df[:, "OBJ6"]);
-
+    # scaling
     x_scaled_df, x_scalers = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
 
@@ -423,7 +427,9 @@ function main()
     @assert names(y_df) == names(y_scaled_df)
 
     # hardcoding that we are using the same train / test indexes for everything
-    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(x_scaled_df, y_scaled_df; read_in=true)
+    x_train_df, x_test_df, y_train_df, y_test_df = traintestsplit(
+        x_scaled_df, y_scaled_df; read_in=true, cut_transmission=cut_transmission
+    )
 
     x_train = Float32.(Matrix(x_train_df))
     x_test = Float32.(Matrix(x_test_df))
