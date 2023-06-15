@@ -91,11 +91,50 @@ function applycut(x_raw, y_raw, dvar_label::String, lower::Float32, upper::Float
         "OBJ6"=>y_raw[keep_idx, "OBJ6"],
     )
 
-    println("- x_raw shape: $(size(x_raw))")
-    println("- y_raw shape: $(size(y_raw))")
+    println("x_raw shape: $(size(x_raw))")
+    println("y_raw shape: $(size(y_raw))")
 
-    println("- x_new shape: $(size(x_new))")
-    println("- y_new shape: $(size(y_new))")
+    println("x_new shape: $(size(x_new))")
+    println("y_new shape: $(size(y_new))")
+
+    return x_new, y_new
+
+end
+
+function applyemicut(x_raw, y_raw)
+    keep_idx = findall(y_raw[:, "OBJ5"] .>= y_raw[:, "OBJ6"])
+
+    x_new = DataFrame(
+        "DVAR1"=>x_raw[keep_idx, "DVAR1"],
+	"DVAR2"=>x_raw[keep_idx, "DVAR2"],
+	"DVAR3"=>x_raw[keep_idx, "DVAR3"], 
+	"DVAR4"=>x_raw[keep_idx, "DVAR4"],
+	"DVAR5"=>x_raw[keep_idx, "DVAR5"],
+	"DVAR6"=>x_raw[keep_idx, "DVAR6"],
+	"DVAR7"=>x_raw[keep_idx, "DVAR7"],
+	"DVAR8"=>x_raw[keep_idx, "DVAR8"],
+	"DVAR9"=>x_raw[keep_idx, "DVAR9"],
+	"DVAR10"=>x_raw[keep_idx, "DVAR10"],
+	"DVAR11"=>x_raw[keep_idx, "DVAR11"],
+	"DVAR12"=>x_raw[keep_idx, "DVAR12"],
+	"DVAR13"=>x_raw[keep_idx, "DVAR13"],
+	"DVAR14"=>x_raw[keep_idx, "DVAR14"]
+	)
+	
+    y_new = DataFrame(
+        "OBJ1"=>y_raw[keep_idx, "OBJ1"],
+        "OBJ2"=>y_raw[keep_idx, "OBJ2"],
+        "OBJ3"=>y_raw[keep_idx, "OBJ3"],
+        "OBJ4"=>y_raw[keep_idx, "OBJ4"],
+        "OBJ5"=>y_raw[keep_idx, "OBJ5"],
+        "OBJ6"=>y_raw[keep_idx, "OBJ6"],
+        )
+
+    println("x_raw shape: $(size(x_raw))")
+    println("x_raw shape: $(size(y_raw))")
+
+    println("x_new shape: $(size(x_new))")
+    println("y_new shape: $(size(y_new))")
 
     return x_new, y_new
 
@@ -164,33 +203,20 @@ function fit_transform(data)
     transform(scaler, data)
 end
 
-function minmaxscaledf(df; scalers=nothing)
+function minmaxscaledf(df)
     scaled_data_dict = Dict(colname=>[] for colname in names(df))
+    scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
 
-    if isnothing(scalers)
-        # means we should fit the scalers and then transform
-        scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
+    for colname in names(df)
+        data = df[!, colname]
+        scaler = MinMaxScaler(0., 0.)
+        fit!(scaler, data)
 
-        for colname in names(df)
-            data = df[!, colname]
-            scaler = MinMaxScaler(0., 0.)
-            fit!(scaler, data)
-
-            scaled_data_dict[colname] = transform(scaler, data)
-            scalers[colname] = scaler
-        end
-    else
-        # means we have already fit the scalers, so we just need to perform the transformation
-        for colname in names(df)
-            data = df[!, colname]
-            scaler = scalers[colname]
-
-            scaled_data_dict[colname] = transform(scaler, data)
-        end
+        scaled_data_dict[colname] = transform(scaler, data)
+        scalers[colname] = scaler
     end
-
     df_out = DataFrame(scaled_data_dict)
-        
+    
     # need to reorder columns -- building the dataframe from the dictionary alphebatized the columns,
     # which is not what we want.
     df_out = df_out[!, names(df)]
@@ -199,7 +225,7 @@ end
 
 
 # train test split
-function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes/", cut_transmission=false)
+function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes/")
     if !read_in
         println("- Generating new train and test sets")
         data_size = nrow(x_df)
@@ -208,17 +234,12 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes
         train_indexes = sample(1:data_size, train_size, replace=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
-        if cut_transmission
-            println("- Using preexisting train and test sets for transmission >= 60%")
+        println("- Using preexisting train and test sets")
+        train_index_df = CSV.File("$path/train_indexes.csv"; header=0) |> DataFrame
+        test_index_df = CSV.File("$path/test_indexes.csv"; header=0) |> DataFrame
 
-        else
-            println("- Using preexisting train and test sets for all values of transmission")
-            train_index_df = CSV.File("$path/train_indexes.csv"; header=0) |> DataFrame
-            test_index_df = CSV.File("$path/test_indexes.csv"; header=0) |> DataFrame
-
-            train_indexes = train_index_df[:, "Column1"]
-            test_indexes = test_index_df[:, "Column1"]
-        end
+        train_indexes = train_index_df[:, "Column1"]
+        test_indexes = test_index_df[:, "Column1"]
     end
 
     x_train_df = x_df[train_indexes, :]; x_test_df = x_df[test_indexes, :];
