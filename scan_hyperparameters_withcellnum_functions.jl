@@ -83,16 +83,13 @@ function parse_commandline()
             default = "results.json"
         "--log-training-starts"
             help = "Print which model is being trained"
-            arg_type = Bool
-            default = true
+            action = :store_true
         "--log-training-loss"
             help = "Print training loss per epoch"
-            arg_type = Bool
-            default = false
+            action = :store_true
         "--log-folds"
             help = "Print status of each fold"
-            arg_type = Bool
-            default = false
+            action = :store_true
         "--cut-transmission"
             help = "Restrict transmission values to >= 60%"
             action = :store_true
