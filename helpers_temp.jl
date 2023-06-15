@@ -186,7 +186,7 @@ end
 
 
 # train test split
-function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes/")
+function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes/", cut_transmission=true)
     if !read_in
         println("- Generating new train and test sets")
         data_size = nrow(x_df)
@@ -196,6 +196,12 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
         println("- Using preexisting train and test sets")
+        
+        if cut_transmission=true
+            println("  - for transmission >= 60")
+            path = path * "transmission_above_60/"
+        end
+
         train_index_df = CSV.File("$path/train_indexes.csv"; header=0) |> DataFrame
         test_index_df = CSV.File("$path/test_indexes.csv"; header=0) |> DataFrame
 
