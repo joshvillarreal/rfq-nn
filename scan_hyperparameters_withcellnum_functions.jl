@@ -404,13 +404,13 @@ function main()
     # how to process cellnumber, for now let's make it another dvar
     x_raw_df = hcat(x_raw_df, cellnumber_df)
 
-    # cutting transmission
+    #= cutting transmission
     if cut_transmission
         println("Cutting Transmission to 60-100 percent...")
         lower::Float32 = 60
         upper::Float32 = 120
         x_raw_df, y_df = applycut(x_raw_df, y_df, "OBJ1", lower, upper; with_numcells=true)
-    end
+    end =#
 
     # decorrelating
     println("Decorrelating...")
@@ -419,8 +419,6 @@ function main()
     # scaling
     x_scaled_df, x_scalers = minmaxscaledf(x_df)
     y_scaled_df, y_scalers = minmaxscaledf(y_df)
-
-    println(x_scalers)
 
     # need to make sure that column names didn't switch orders
     @assert names(x_raw_df) == names(x_scaled_df)

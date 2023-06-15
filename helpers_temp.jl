@@ -195,12 +195,11 @@ function traintestsplit(x_df, y_df; train_frac=0.8, read_in=false, path="indexes
         train_indexes = sample(1:data_size, train_size, replace=false)
         test_indexes = (1:data_size)[(1:data_size) .∉ Ref(train_indexes)]
     else
-        println("- Using preexisting train and test sets")
-        
-        if cut_transmission=true
-            println("  - for transmission >= 60")
+        if cut_transmission
             path = path * "transmission_above_60/"
         end
+
+        println("- Using preexisting train and test sets from $path")
 
         train_index_df = CSV.File("$path/train_indexes.csv"; header=0) |> DataFrame
         test_index_df = CSV.File("$path/test_indexes.csv"; header=0) |> DataFrame
