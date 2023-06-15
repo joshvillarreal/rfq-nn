@@ -164,20 +164,33 @@ function fit_transform(data)
     transform(scaler, data)
 end
 
-function minmaxscaledf(df)
+function minmaxscaledf(df; scalers=nothing)
     scaled_data_dict = Dict(colname=>[] for colname in names(df))
-    scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
 
-    for colname in names(df)
-        data = df[!, colname]
-        scaler = MinMaxScaler(0., 0.)
-        fit!(scaler, data)
+    if isnothing(scalers)
+        # means we should fit the scalers and then transform
+        scalers = Dict(colname=>MinMaxScaler(0., 0.) for colname in names(df))
 
-        scaled_data_dict[colname] = transform(scaler, data)
-        scalers[colname] = scaler
+        for colname in names(df)
+            data = df[!, colname]
+            scaler = MinMaxScaler(0., 0.)
+            fit!(scaler, data)
+
+            scaled_data_dict[colname] = transform(scaler, data)
+            scalers[colname] = scaler
+        end
+    else
+        # means we have already fit the scalers, so we just need to perform the transformation
+        for colname in names(df)
+            data = df[!, colname]
+            scaler = scalers[colname]
+
+            scaled_data_dict[colname] = transform(scaler, data)
+        end
     end
+
     df_out = DataFrame(scaled_data_dict)
-    
+        
     # need to reorder columns -- building the dataframe from the dictionary alphebatized the columns,
     # which is not what we want.
     df_out = df_out[!, names(df)]
