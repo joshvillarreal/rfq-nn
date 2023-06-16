@@ -1,0 +1,23 @@
+submit22.mit.edu
+
+/work/submit/villaj/julia-1.9.1/bin/julia
+
+Running Julia Code
+Gathering arguments...
+HERE IS THE NUMBER OF DEVICES2
+Passed N Threads == N GPU sanity check!
+Formatting data...
+Decorrelating...
+- Using preexisting train and test sets from indexes/transmission_above_60/
+Preparing for training...
+Beginning training...
+- Training width=50, depth=5, activation=sigmoid, batchsize=1024, learning_rate=0.001, dropout_rate=0.0 on thread 2
+- Training width=50, depth=3, activation=sigmoid, batchsize=1024, learning_rate=0.001, dropout_rate=0.0 on thread 1
+  - Fold 1 of 2023-06-16_11-42-44_w=50_d=5_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+  - Fold 1 of 2023-06-16_11-42-44_w=50_d=3_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+  - Fold 2 of 2023-06-16_11-42-44_w=50_d=5_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+  - Fold 2 of 2023-06-16_11-42-44_w=50_d=3_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+- Training width=50, depth=4, activation=sigmoid, batchsize=1024, learning_rate=0.001, dropout_rate=0.0 on thread 1
+  - Fold 1 of 2023-06-16_11-44-04_w=50_d=4_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+  - Fold 2 of 2023-06-16_11-44-04_w=50_d=4_activation=sigmoid_bs=1024_lr=0.001_dr=0.0
+
