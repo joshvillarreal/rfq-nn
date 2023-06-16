@@ -375,6 +375,8 @@ function main()
     use_gpu = parsed_args["gpu"]
     cut_transmission = parsed_args["cut-transmission"]
 
+    CUDA.set_runtime_version!("local")
+
     # making sure we're CUDA functional
     if CUDA.functional()
         # Sanity check that we have exaclty N Threads == N CUDA devices
