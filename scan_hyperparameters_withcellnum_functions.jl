@@ -378,8 +378,6 @@ function main()
     # making sure we're CUDA functional
     if CUDA.functional()
         # Sanity check that we have exaclty N Threads == N CUDA devices
-        println("HERE IS THE NUMBER OF DEVICES", length(devices()))
-
         if length(devices()) != Threads.nthreads()
             println("N Threads must be equal N GPUs! Aborting...")
             exit()
@@ -467,6 +465,7 @@ function main()
         # recording results
         outdata_dict = Dict(
             "model_id"=>model_id,
+            "cut_transmission"=>string(cut_transmission),
             "configs"=>Dict(
                 "n_folds"=>n_folds,
                 "width"=>width,
