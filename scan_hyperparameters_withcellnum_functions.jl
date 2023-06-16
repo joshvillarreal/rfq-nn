@@ -378,6 +378,8 @@ function main()
     # making sure we're CUDA functional
     if CUDA.functional()
         # Sanity check that we have exaclty N Threads == N CUDA devices
+        println("HERE IS THE NUMBER OF DEVICES", length(devices()))
+
         if length(devices()) != Threads.nthreads()
             println("N Threads must be equal N GPUs! Aborting...")
             exit()
