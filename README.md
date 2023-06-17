@@ -19,3 +19,21 @@ The `Project.toml` and `Manifest.toml` contain all necessary dependencies, and e
 To set up this environment, run the following command from the base directory:
 
 ```$ julia --project=. -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'```
+
+### Using Jupyter Notebooks
+
+To ensure your environment is properly configured when beginning a Jupyter session, first launch Julia from the base directory with ``julia --project=.``, and then run
+
+```julia
+using IJulia
+notebook(dir=".")
+```
+
+You will likely then have to activate and instantiate the environment from your notebook once the kernel is started:
+
+
+```julia
+using Pkg
+Pkg.activate("/path/to/rfq-nn/.")
+Pkg.instantiate()
+```
