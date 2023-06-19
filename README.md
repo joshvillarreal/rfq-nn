@@ -37,3 +37,7 @@ using Pkg
 Pkg.activate("/path/to/rfq-nn/.")
 Pkg.instantiate()
 ```
+## Results
+In the `/results/` directory, the following files are relevant to the final write-up of this analysis:
+* `2023-06-17_05-13-31_results.json`, `2023-06-17_05-52-33_results.json`, `2023-06-17_10-22-31_results.json`: Collectively the full hyperparameter scan on all available training data
+* `2023-06-16_22-09-00_results.json`: Full hyperparameter scan on data having transmission restricted to $\geq 60\%$
