@@ -37,3 +37,9 @@ using Pkg
 Pkg.activate("/path/to/rfq-nn/.")
 Pkg.instantiate()
 ```
+## Results
+In the `/results/` directory, the following files are relevant to the final write-up of this analysis:
+* `2023-06-17_05-13-31_results.json`, `2023-06-17_05-52-33_results.json`, `2023-06-17_10-22-31_results.json`: Collectively the full hyperparameter scan on all available training data
+* `2023-06-16_22-09-00_results.json`: Full hyperparameter scan on data having transmission restricted to $\geq 60\%$
+* `2023-06-18_18-09-23_results.json`, `2023-06-18_18-24-20_results.json`, `2023-06-19_00-25-36_results.json`, `2023-06-19_15-04-48_results.json`: Collectively the scan on learning rates and dropout rates for the width 6, depth 100 neural network trained on data having transmission restricted to $\geq 60\%$
+* `2023-06-19_02-49-35_results.json`, `2023-06-19_08-31-59_results.json`, `2023-06-19_11-07-34_results.json`, ONE MORE: Collectively the scan on learning rates and dropout rates for the width 7, depth 100 neural network trained on data having transmission restricted to $\geq 60\%$.
