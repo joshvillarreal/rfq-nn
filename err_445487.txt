@@ -1,4 +1,0 @@
-┌ Error: cuDNN is not available on your system (looked in /usr/local/cuda/targets/x86_64-linux, /usr/local/cuda-11.2, /usr/local/cuda-11.3, /usr/local/cuda-11.1, /usr/local/cuda-11.0, /usr/local/cuda-10.2, /usr/local/cuda-10.1, /usr/local/cuda-10.0)
-└ @ cuDNN /work/submit/villaj/.julia/packages/cuDNN/3J08S/src/cuDNN.jl:168
-┌ Warning: CUDA.jl found cuda, but did not find libcudnn. Some functionality will not be available.
-└ @ Flux /work/submit/villaj/.julia/packages/Flux/EHgZm/src/functor.jl:296
