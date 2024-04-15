@@ -1,5 +1,23 @@
 # rfq-nn
-Using deep learning to simulate RFQ-throughgoing beam dynamics
+**Using deep learning to simulate RFQ-throughgoing beam dynamics.**
+
+Our publication is now available at _Machine Learning: Science and Technology_: <a href="https://iopscience.iop.org/article/10.1088/2632-2153/ad3a30">see it here</a>. If you would like to cite this work, please use the following `BibTeX` reference:
+
+```
+@article{Villarreal_2024,
+doi = {10.1088/2632-2153/ad3a30},
+url = {https://dx.doi.org/10.1088/2632-2153/ad3a30},
+year = {2024},
+month = {apr},
+publisher = {IOP Publishing},
+volume = {5},
+number = {2},
+pages = {025009},
+author = {Joshua Villarreal and Daniel Winklehner and Daniel Koser and Janet M Conrad},
+title = {Neural networks as effective surrogate models of radio-frequency quadrupole particle accelerator simulations},
+journal = {Machine Learning: Science and Technology}
+}
+```
 
 ## Julia Installation Instructions
 You can download Julia <a href="https://julialang.org/downloads/">here</a>. You will also need to be able to run Julia from the command line. This can be done by adding the following line to your `~/.bashrc`:
